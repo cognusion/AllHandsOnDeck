@@ -13,6 +13,7 @@ type WorkflowReturn struct {
 
 type Workflow struct {
 	Name string
+	Filter string
 	Commands []string
 	ComBreaks []bool
 }

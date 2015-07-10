@@ -128,6 +128,12 @@ func main() {
 			continue
 		}
 		
+		// Additionally, if there is a filter on the workflow, check the host against that too.
+		if workflow && conf.Workflows[wfIndex].Filter != "" && host.If(conf.Workflows[wfIndex].Filter) == false {
+			hostCount--
+			continue
+		}
+		
 		//log.Printf("Host: %s\n",host.Name)
 		
 		// Handle alternate usernames

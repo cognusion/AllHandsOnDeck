@@ -36,7 +36,7 @@ func (cr *CommandReturn) StderrStrings() []string {
 func (cr *CommandReturn) Process() {
 	if strings.Contains(cr.Command, "needs-restarting") {
 		plist := plistToInits(cr.StdoutStrings())
-		log.Printf("%s:\n%v\n",cr.Hostname,plist)	
+		log.Printf("%s: %s\n%v\n",cr.Hostname,cr.Command,plist)	
 	} else {
 		log.Printf("%s: %s\nSTDOUT:\n%s\nSTDERR:\n%s\nEND\n", cr.Hostname, cr.Command, cr.StdoutString(), cr.StderrString())
 	}
