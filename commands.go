@@ -33,8 +33,21 @@ func (cr *CommandReturn) StderrStrings() []string {
 	return strings.Split(cr.Stderr.String(),"\n")
 }
 
-func executeCommand(cmd string, host Host, config *ssh.ClientConfig, pty bool) CommandReturn {
+func (cr *CommandReturn) Process() {
+	if strings.Contains(cr.Command, "needs-restarting") {
+		plist := plistToInits(cr.StdoutStrings())
+		log.Printf("%s:\n%v\n",cr.Hostname,plist)	
+	} else {
+		log.Printf("%s: %s\nSTDOUT:\n%s\nSTDERR:\n%s\nEND\n", cr.Hostname, cr.Command, cr.StdoutString(), cr.StderrString())
+	}
+}
 
+func executeCommand(cmd string, host Host, config *ssh.ClientConfig, sudo bool) CommandReturn {
+
+	if sudo {
+		cmd = "sudo " + cmd
+	}
+	
 	var cr CommandReturn
 	cr.HostObj = host
 	cr.Command = cmd
@@ -58,7 +71,7 @@ func executeCommand(cmd string, host Host, config *ssh.ClientConfig, pty bool) C
 	session, _ := conn.NewSession()
 	defer session.Close()
 
-	if pty {
+	if sudo {
 		// Set up terminal modes
 		modes := ssh.TerminalModes{
 		    ssh.ECHO:          0,     // disable echoing

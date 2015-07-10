@@ -25,11 +25,11 @@ func (h *Host) SearchTags(tag string) bool {
 
 	for _,t := range h.Tags {
 		if t == tag {
-			log.Printf("\t\tFound %s!\n",tag)
+			//log.Printf("\tFound %s!\n",tag)
 			return true
 		}
 	}
-	log.Printf("\tDidn't find %s\n",tag)
+	//log.Printf("\tDidn't find %s\n",tag)
 	return false
 }
 
