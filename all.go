@@ -14,7 +14,7 @@ import (
 )
 
 type Config struct {
-	Hosts []Host
+	Hosts     []Host
 	Workflows []Workflow
 }
 
@@ -28,17 +28,17 @@ func main() {
 		sudo       bool
 		timeout    int
 		cmd        string
-		workflow	bool
-		filter  string
+		workflow   bool
+		filter     string
 		debug      bool
 
-		conf  Config
-		auths []ssh.AuthMethod
-		wfIndex	int
+		conf    Config
+		auths   []ssh.AuthMethod
+		wfIndex int
 	)
 
 	currentUser, _ := user.Current()
-	
+
 	commandResults := make(chan CommandReturn, 10)
 	wfResults := make(chan WorkflowReturn, 10)
 
@@ -50,10 +50,9 @@ func main() {
 	flag.IntVar(&timeout, "timeout", 5, "Seconds before command times out")
 	flag.BoolVar(&sudo, "sudo", false, "Whether to run commands via sudo")
 	flag.BoolVar(&workflow, "workflow", false, "The --cmd is a workflow")
-	flag.StringVar(&cmd,"cmd","","Command to run")
-	flag.StringVar(&filter,"filter","","Boolean expression to positively filter on Tags")
+	flag.StringVar(&cmd, "cmd", "", "Command to run")
+	flag.StringVar(&filter, "filter", "", "Boolean expression to positively filter on Tags")
 	flag.Parse()
-
 
 	// Handle the configFile
 	if configFile == "" {
@@ -69,12 +68,12 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	
+
 	// We must have a command, no?
 	if cmd == "" {
 		log.Fatalln("cmd must be set!")
 	}
-	
+
 	// If cmd is a workflow
 	//	- ensure the workflow exists
 	//  - cache the location of the specified workflow
@@ -87,10 +86,10 @@ func main() {
 			}
 		}
 		if wfIndex < 0 {
-			log.Fatalf("Workflow '%s' does not exist in specified config!\n",cmd)
+			log.Fatalf("Workflow '%s' does not exist in specified config!\n", cmd)
 		}
 	}
-	
+
 	/*
 	 * We are no allowing multiple keys, or key-per-hosts. If you need to possibly use
 	 * multiple keys, ensure ssh-agent is running and has them added, and execute with
@@ -121,33 +120,33 @@ func main() {
 
 	hostCount := len(conf.Hosts)
 	for _, host := range conf.Hosts {
-			
+
 		// Check to see if the this host matches our filter
 		if filter != "" && host.If(filter) == false {
 			hostCount--
 			continue
 		}
-		
+
 		// Additionally, if there is a filter on the workflow, check the host against that too.
 		if workflow && conf.Workflows[wfIndex].Filter != "" && host.If(conf.Workflows[wfIndex].Filter) == false {
 			hostCount--
 			continue
 		}
-		
+
 		//log.Printf("Host: %s\n",host.Name)
-		
+
 		// Handle alternate usernames
-		configUser := userName	
+		configUser := userName
 		if host.AltUser != "" {
 			configUser = host.AltUser
 		}
-	
+
 		// SSH Config
 		config := &ssh.ClientConfig{
 			User: configUser,
 			Auth: auths,
 		}
-		
+
 		/*
 		 * This is where the work is getting accomplished.
 		 *   Workflows are configured sets of commands and logics, with sets of returns
@@ -155,7 +154,7 @@ func main() {
 		 */
 		if workflow {
 			// Workflow
-			
+
 			go func(host Host) {
 				wfResults <- conf.Workflows[wfIndex].Exec(host, config, sudo)
 			}(host)
@@ -175,9 +174,9 @@ func main() {
 			select {
 			case res := <-wfResults:
 				if res.Completed == false {
-					log.Printf("Workflow %s did not fully complete\n",res.Name)
+					log.Printf("Workflow %s did not fully complete\n", res.Name)
 				}
-				for _,c := range res.CommandReturns {
+				for _, c := range res.CommandReturns {
 					c.Process()
 				}
 			case <-time.After(time.Duration(timeout) * time.Second):
@@ -194,6 +193,6 @@ func main() {
 				return
 			}
 		}
-		
+
 	}
 }

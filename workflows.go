@@ -12,9 +12,10 @@ type WorkflowReturn struct {
 }
 
 type Workflow struct {
-	Name string
-	Filter string
-	Commands []string
+	Name      string
+	Filter    string
+	Sudo      bool
+	Commands  []string
 	ComBreaks []bool
 }
 
@@ -24,11 +25,16 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 	wr.Name = w.Name
 	wr.HostObj = host
 	wr.Completed = false
-	
-	for i,c := range w.Commands {
+
+	// Per-wf override for sudo
+	if w.Sudo == true {
+		sudo = true
+	}
+
+	for i, c := range w.Commands {
 		// TODO: Handle "WF" special commands
 		res := executeCommand(c, host, config, sudo)
-		wr.CommandReturns = append(wr.CommandReturns,res)
+		wr.CommandReturns = append(wr.CommandReturns, res)
 		if res.Error != nil && (len(w.ComBreaks) == 0 || w.ComBreaks[i] == true) {
 			// We have a valid error, and either we're not using ComBreaks (assume breaks)
 			//	or we are using ComBreaks, and they're true
@@ -36,7 +42,7 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 		}
 	}
 	// POST: No errors
-	
+
 	wr.Completed = true
 	return wr
 }

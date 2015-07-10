@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-func plistToInits(plist []string) []string {
+func needsRestartingMangler(plist []string) []string {
 
 	// We make a map to get free dedup prior to listing
 	initMap := make(map[string]bool)
