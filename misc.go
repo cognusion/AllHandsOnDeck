@@ -28,8 +28,11 @@ func needsRestartingMangler(plist []string) []string {
 				cmd = cmds[0]
 			}
 			
-			
-			if cmd == "java" && strings.Contains(p, "catalina") {
+			if cmd == "mongod" || cmd == "udevd" {
+				// Do Not Want
+			} else if cmd == "haproxy" {
+				initMap["haproxy"] = true
+			} else if cmd == "java" && strings.Contains(p, "catalina") {
 				initMap["tomcat"] = true
 			} else if strings.HasSuffix(cmd, "d") {
 				if cmd == "rsyslogd" {

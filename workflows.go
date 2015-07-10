@@ -2,6 +2,7 @@ package main
 
 import (
 	"golang.org/x/crypto/ssh"
+	"strings"
 )
 
 type WorkflowReturn struct {
@@ -12,11 +13,11 @@ type WorkflowReturn struct {
 }
 
 type Workflow struct {
-	Name      string
-	Filter    string
-	Sudo      bool
-	Commands  []string
-	ComBreaks []bool
+	Name          string
+	Filter        string
+	Sudo          bool
+	Commands      []string
+	CommandBreaks []bool
 }
 
 func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) WorkflowReturn {
@@ -32,13 +33,51 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 	}
 
 	for i, c := range w.Commands {
-		// TODO: Handle "WF" special commands
-		res := executeCommand(c, host, config, sudo)
-		wr.CommandReturns = append(wr.CommandReturns, res)
-		if res.Error != nil && (len(w.ComBreaks) == 0 || w.ComBreaks[i] == true) {
-			// We have a valid error, and either we're not using ComBreaks (assume breaks)
-			//	or we are using ComBreaks, and they're true
-			return wr
+		// Handle workflow special commands
+		if strings.HasPrefix(c,"FOR ") {
+			cparts := strings.Split(c, " ")
+			if len(cparts) != 3 {
+				// Hmmm, malformated FOR
+				return wr //?
+			}
+			
+			listRes := executeCommand(cparts[1], host, config, sudo)
+			wr.CommandReturns = append(wr.CommandReturns, listRes)
+			if listRes.Error != nil && (len(w.CommandBreaks) == 0 || w.CommandBreaks[i] == true) {
+				// We have a valid error, and either we're not using CommandBreaks (assume breaks)
+				//	or we are using CommandBreaks, and they're true
+				return wr
+			} else if cparts[2] == "RESTART" && cparts[1] == "needs-restarting" {
+				// Restart requested.
+				
+				plist := needsRestartingMangler(listRes.StdoutStrings())
+				restartResults := make(chan CommandReturn, 10)
+				for _,p := range plist {
+					restartCommand := "service " + p + " restart"
+					
+					go func(host Host) {
+						restartResults <- executeCommand(restartCommand, host, config, sudo)
+					}(host)
+					
+				}
+				
+				for pi := 0; pi < len(plist); pi++ {
+					select {
+					case res := <-restartResults:
+						wr.CommandReturns = append(wr.CommandReturns, res)
+					}
+				}
+			}
+			
+		} else {
+			// Regular command
+			res := executeCommand(c, host, config, sudo)
+			wr.CommandReturns = append(wr.CommandReturns, res)
+			if res.Error != nil && (len(w.CommandBreaks) == 0 || w.CommandBreaks[i] == true) {
+				// We have a valid error, and either we're not using CommandBreaks (assume breaks)
+				//	or we are using CommandBreaks, and they're true
+				return wr
+			}
 		}
 	}
 	// POST: No errors
