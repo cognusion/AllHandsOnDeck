@@ -17,6 +17,8 @@ type Config struct {
 	Workflows []Workflow
 }
 
+var debugOut *log.Logger
+
 func main() {
 
 	var (
@@ -53,7 +55,13 @@ func main() {
 	flag.StringVar(&filter, "filter", "", "Boolean expression to positively filter on Tags")
 	flag.Parse()
 
-	// Handle the configFile
+	if debug {
+		debugOut = log.New(os.Stdout,"[DEBUG]",log.Lshortfile)
+	} else {
+		debugOut = log.New(ioutil.Discard,"",log.Lshortfile)
+	}
+	
+	// Handle the configs
 	if configFolder == "" {
 		log.Fatalln("configs must be set!")
 	} else {
@@ -124,7 +132,7 @@ func main() {
 			continue
 		}
 
-		//log.Printf("Host: %s\n",host.Name)
+		debugOut.Printf("Host: %s\n",host.Name)
 
 		// Handle alternate usernames
 		configUser := userName
@@ -171,7 +179,7 @@ func main() {
 					c.Process()
 				}
 			case <-time.After(time.Duration(timeout) * time.Second):
-				log.Println("Timed out!")
+				log.Println("Workflow operation timed out!")
 				return
 			}
 		} else {
@@ -180,10 +188,9 @@ func main() {
 			case res := <-commandResults:
 				res.Process()
 			case <-time.After(time.Duration(timeout) * time.Second):
-				log.Println("Timed out!")
+				log.Println("Command operation timed out!")
 				return
 			}
 		}
-
 	}
 }

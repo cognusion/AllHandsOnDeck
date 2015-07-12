@@ -25,11 +25,11 @@ func (h *Host) SearchTags(tag string) bool {
 
 	for _, t := range h.Tags {
 		if t == tag {
-			//log.Printf("\tFound %s!\n",tag)
+			//debugOut.Printf("%s: Found %s!\n",h.Name,tag)
 			return true
 		}
 	}
-	//log.Printf("\tDidn't find %s\n",tag)
+	//debugOut.Printf("%s: Didn't find %s\n",h.Name,tag)
 	return false
 }
 
@@ -43,12 +43,12 @@ func (h *Host) SearchTags(tag string) bool {
 */
 func (h *Host) If(cond string) bool {
 
-	//log.Printf("COND: %s\n",cond)
+	//debugOut.Printf("COND: %s\n",cond)
 
 	if strings.Contains(cond, " and ") {
 		ands := strings.Split(cond, " and ")
 		for _, a := range ands {
-			//log.Printf("\tAND: %s\n",a)
+			//debugOut.Printf("\tAND: %s\n",a)
 			ret := h.If(a)
 			if ret == false {
 				return false
@@ -58,7 +58,7 @@ func (h *Host) If(cond string) bool {
 	} else if strings.Contains(cond, " or ") {
 		ors := strings.Split(cond, " or ")
 		for _, o := range ors {
-			//log.Printf("\tOR: %s\n",o)
+			//debugOut.Printf("\tOR: %s\n",o)
 			ret := h.If(o)
 			if ret == true {
 				return true
@@ -69,7 +69,7 @@ func (h *Host) If(cond string) bool {
 		// Single statement
 		parts := strings.Split(cond, " ")
 
-		//log.Printf("\tDoes %s %s %s?\n",parts[0],parts[1],parts[2])
+		//debugOut.Printf("\tDoes %s %s %s?\n",parts[0],parts[1],parts[2])
 		if parts[1] == "==" {
 			// Equality
 			if parts[0] == "Tags" {
