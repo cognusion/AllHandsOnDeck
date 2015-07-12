@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -70,24 +71,34 @@ func (h *Host) If(cond string) bool {
 		parts := strings.Split(cond, " ")
 
 		//debugOut.Printf("\tDoes %s %s %s?\n",parts[0],parts[1],parts[2])
-		if parts[1] == "==" {
-			// Equality
-			if parts[0] == "Tags" {
-				if h.SearchTags(parts[2]) {
-					return true
-				} else {
-					return false
-				}
-			}
-		} else if parts[1] == "!=" {
-			// Inequality
-			if parts[0] == "Tags" {
-				if h.SearchTags(parts[2]) {
-					return false
-				} else {
-					return true
-				}
-			}
+		
+		// Case/swtich to check each of 
+		var found bool = false
+		if parts[0] == "Tags" {
+			found = h.SearchTags(parts[2])
+		} else if parts[0] == "Port" {
+			fport,_ := strconv.Atoi(parts[2])
+			found = h.Port == fport
+		} else if parts[0] == "Address" {
+			found = h.Address == parts[2]
+		} else if parts[0] == "Name" {
+			found = h.Name == parts[2]
+		} else if parts[0] == "Arch" {
+			found = h.Arch == parts[2]
+		} else if parts[0] == "AltUser" {
+			found = h.AltUser == parts[2]
+		} else {
+			// Hmmm...
+			debugOut.Printf("Conditional name '%s' does not exist!\n",parts[0])
+			return false
+		}
+		
+		if parts[1] == "==" && found {
+			return true
+		} else if parts[1] == "!=" && found == false {
+			return true
+		} else {
+			return false
 		}
 	}
 
