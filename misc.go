@@ -90,6 +90,21 @@ func needsRestartingMangler(plist []string) []string {
 	return initList
 }
 
+func makeList(list []string) []string {
+	var newList []string
+	for _, tc := range list {
+		if strings.Contains(tc, ",") {
+			// Handle comma hell
+			tc = strings.TrimSuffix(tc, ",") // Nuke trailing commas
+			nl := strings.Split(tc, ",")     // Split out any comma-sep
+			newList = sliceAppend(newList, nl)
+		} else {
+			newList = append(newList, tc)
+		}
+	}
+	return newList
+}
+
 func sliceAppend(slice []string, elements []string) []string {
 	n := len(slice)
 	total := len(slice) + len(elements)

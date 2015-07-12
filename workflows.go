@@ -63,18 +63,7 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 				list = needsRestartingMangler(listRes.StdoutStrings())
 			} else {
 				// Treat the middle of cparts as actual list items
-				var newList []string
-				for _, tc := range cparts[1 : len(cparts)-1] {
-					if strings.Contains(tc, ",") {
-						// Handle comma hell
-						tc = strings.TrimSuffix(tc, ",") // Nuke trailing commas
-						nl := strings.Split(tc, ",")     // Split out any comma-sep
-						newList = sliceAppend(newList, nl)
-					} else {
-						newList = append(newList, tc)
-					}
-				}
-				list = newList
+				list = makeList(cparts[1 : len(cparts)-1])
 			}
 
 			// Handle our ACTIONs
