@@ -127,6 +127,11 @@ Workflows are quite powerful, and allow you to specify:
 	]
 }
 ```
+It is worth noting that each command in a workflow is executed in order, serially, and atomically. Thus if you "cd" in one command, don't expect in a subsequent command that cwd will be where you left it. If you need such things, chain multiple commands with a semi-colon, e.g.
+
+```bash
+"cd /tmp; mkdir X; cd X"
+```
 
 Filters
 =======
@@ -152,16 +157,37 @@ Workflow Special Commands
 FOR
 ---
 
+    FOR list ACTION
+
 One of the things I conveniently ignored in the workflow example above was a particular command: FOR needs-restarting RESTART
 
 This is a work in progress, but what that command does, on some systems, is runs the yum-provided "needs-restarting" command, sanitizes and mangles the results into a list of Well-Known Packages, and then runs "service ... restart" on them (in parallelish).
 
 **I strongly recommend you don't use it.** I do all the time, but I also intimately know the state of my systems, and the ramifications therein.
 
-The syntax is FOR list ACTION, where "ACTION" currently is one of: START, STOP, RESTART, STATUS, and "list" is either the keyword "needs-restarting", as described above, or a space-separated list of inits to act on, e.g.
+ACTION is currently one of: START, STOP, RESTART, STATUS, and "list" is either the keyword "needs-restarting", as described above, or a space-separated list of inits to act on, e.g.
 
 ```bash
 FOR httpd tomcat mysql STOP
 FOR mysql tomcat httpd START
 FOR mongod STATUS
+```
+
+SET
+---
+
+    SET %varname% "Some String Value"
+
+Variables, macros, what-have-you are what makes programming worth doing. All is worth doing
+too, so it needs those. In any workflow, you can put a SET command in lieu of a "real" command, to create a variable bound to the workflow, to be used later in any non-SET command.
+
+### RAND
+
+    RAND(n)
+    
+Additionally, to aid in making temp folders, etc. there is a special nugget to create random
+alpha-numeric strings of set length "n". This may be embedded anywhere in a SET string. e.g.
+
+```
+SET %TMPDIR% /tmp/specialRAND(8)folder
 ```

@@ -5,6 +5,8 @@ package main
 import (
 	"golang.org/x/crypto/ssh"
 	"log"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -21,6 +23,18 @@ type Workflow struct {
 	Sudo          bool
 	Commands      []string
 	CommandBreaks []bool
+	vars          map[string]string
+}
+
+func (w *Workflow) varParse(s string) string {
+
+	for k, v := range w.vars {
+		nk := "%" + k + "%"
+		if strings.Contains(s, nk) {
+			s = strings.Replace(s, nk, v, -1)
+		}
+	}
+	return s
 }
 
 func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) WorkflowReturn {
@@ -37,8 +51,47 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 
 	for i, c := range w.Commands {
 
+		// Check the command for variables
+		if strings.HasPrefix(c, "SET ") == false {
+			c = w.varParse(c)
+		}
+
 		// Handle workflow special commands
-		if strings.HasPrefix(c, "FOR ") {
+		if strings.HasPrefix(c, "SET ") {
+			// SET %varname% "some string"
+
+			cparts := strings.Split(c, " ")
+			if len(cparts) < 3 {
+				// Hmmm, malformated SET
+				log.Printf("'SET %varname% \"value\"' statement incomplete: '%s'\n", c)
+				return wr //?
+			}
+
+			vname := strings.Trim(cparts[1], "%")              // nuke the lead/trail percents from the varname
+			vvalue := strings.Join(cparts[2:len(cparts)], " ") // concatenate any end parts
+			vvalue = strings.Trim(vvalue, "\"")                // nuke lead/trail dub-quotes
+			vvalue = strings.Trim(vvalue, "'")                 // nuke lead/trail sing-quotes
+
+			if strings.Contains(vvalue, "RAND(") {
+				// We need a random string
+				re := regexp.MustCompile(`^(.*)RAND\(([0-9]+)\)(.*)$`)
+				rparts := re.FindStringSubmatch(vvalue)
+				if rparts == nil {
+					log.Printf("Error processing RAND(n): '%s'\n", vvalue)
+					return wr
+				}
+
+				n, err := strconv.Atoi(rparts[2])
+				if err != nil {
+					log.Printf("Problem using '%s' as a number\n", rparts[2])
+					return wr
+				}
+				vvalue = rparts[1] + randString(n) + rparts[3]
+			}
+
+			w.vars[vname] = vvalue
+
+		} else if strings.HasPrefix(c, "FOR ") {
 			// FOR list ACTION
 
 			cparts := strings.Split(c, " ")

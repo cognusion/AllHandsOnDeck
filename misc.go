@@ -3,6 +3,7 @@
 package main
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -118,4 +119,15 @@ func sliceAppend(slice []string, elements []string) []string {
 	slice = slice[:total]
 	copy(slice[n:], elements)
 	return slice
+}
+
+func randString(size int) string {
+	chars := "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	var bytes = make([]byte, size)
+
+	rand.Read(bytes)
+	for k, v := range bytes {
+		bytes[k] = chars[v%byte(len(chars))]
+	}
+	return string(bytes)
 }
