@@ -36,7 +36,7 @@ It may be necessary to run some commands via sudo, which is similarly trivial.
 ```bash
 all --cmd 'uptime; whoami' --sudo
 ```
-Although it does require a pseudo-terminal, and the user needs permission to execute the commands requests.
+Although sudo does require a pseudo-terminal, and the user needs permission to execute the commands requests.
 
 To that end, maybe running All on *all* your hosts isn't a grand idea, so perhaps you'll tag the hosts you want to allow the 'uptime' command to run on, with the tag 'uptime', then you can do:
 ```bash
@@ -49,15 +49,15 @@ Configs
 So how would you tag your hosts? There aren't any hosts listed on that command!! Relax,
 we got this.
 
-All reads all the .json files in the --configs folder (defaults to "configs/" for convenience). Host and Workflow configs stanzas may be smattered about, and will all get meged together when All reads them.
+All reads all the .json files in the --configs folder (defaults to "configs/" for convenience). Host and Workflow config stanzas may be smattered about, and will all get merged together when All reads them.
 
 Host
 ----
 
-Configs specify hosts which can have:
+Configs can specify hosts which can have:
 * Address - IP address of the host (optional, if Name is a valid hostname)
-* Arch - Architecture of the host (e.g. 'Linux x86_64') (optional)
-* Name - Name of the host, if it's a valid DNS hostname, Address may be omitted
+* Arch - Architecture of the host (e.g. 'x86_64') (optional)
+* Name - Name of the host. If it's a valid DNS hostname, Address may be omitted
 * Port - Which port SSH is running on. Defaults to 22.
 * Tags - Array of strings which can be used with filters.
 * User - A specific user to use when SSHing to this host. Overrides --user param.
@@ -137,7 +137,7 @@ Filters are broken up by the boolean 'and' then 'or', so "Tags != noupdate and T
 
 1. Tags != noupdate
 2. Tags == yum or Tags == azl
-3. Name != ugly"
+3. Name != ugly
 
 If the tag list for the host being inspected contains "noupdate", filtering is aborted and the host is skipped. 
 
