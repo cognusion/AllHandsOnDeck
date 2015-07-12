@@ -36,36 +36,50 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 
 	for i, c := range w.Commands {
 		// Handle workflow special commands
-		if strings.HasPrefix(c, "FOR ") {
+		if strings.HasPrefix(c, "FOR "){
+			// FOR list ACTION
+			
 			cparts := strings.Split(c, " ")
-			if len(cparts) != 3 {
+			
+			if len(cparts) < 3 {
 				// Hmmm, malformated FOR
 				return wr //?
 			}
+			
+			var list []string
 
-			listRes := executeCommand(cparts[1], host, config, sudo)
-			wr.CommandReturns = append(wr.CommandReturns, listRes)
-			if listRes.Error != nil && (len(w.CommandBreaks) == 0 || w.CommandBreaks[i] == true) {
-				// We have a valid error, and either we're not using CommandBreaks (assume breaks)
-				//	or we are using CommandBreaks, and they're true
-				return wr
-			} else if cparts[2] == "RESTART" && cparts[1] == "needs-restarting" {
-				// Restart requested.
-
-				plist := needsRestartingMangler(listRes.StdoutStrings())
-				restartResults := make(chan CommandReturn, 10)
-				for _, p := range plist {
-					restartCommand := "service " + p + " restart"
-
-					go func(host Host) {
-						restartResults <- executeCommand(restartCommand, host, config, sudo)
-					}(host)
-
+			// Set up our list
+			if cparts[1] == "needs-restarting" {
+				// Do that voodoo that you do, for special command "needs-restarting"
+				listRes := executeCommand(cparts[1], host, config, sudo)
+				wr.CommandReturns = append(wr.CommandReturns, listRes)
+				if listRes.Error != nil && (len(w.CommandBreaks) == 0 || w.CommandBreaks[i] == true) {
+					// We have a valid error, and either we're not using CommandBreaks (assume breaks)
+					//	or we are using CommandBreaks, and they're true
+					return wr
 				}
+				list = needsRestartingMangler(listRes.StdoutStrings())
+			} else {
+				// Treat the middle of cparts as actual list items
+				list = cparts[1:len(cparts)-2]
+			}
+			
+			// Handle our ACTIONs
+			if cparts[len(cparts)-1] == "RESTART" ||
+				 cparts[len(cparts)-1] == "START" || 
+				 cparts[len(cparts)-1] == "STOP" ||
+				 cparts[len(cparts)-1] == "STATUS"{
+				// Service operation requested.
 
-				for pi := 0; pi < len(plist); pi++ {
+				op := strings.ToLower(cparts[len(cparts)-1])
+				
+				serviceResults := make(chan CommandReturn, 10)
+				
+				serviceList(op, list, serviceResults, host, config, sudo)
+
+				for li := 0; li < len(list); li++ {
 					select {
-					case res := <-restartResults:
+					case res := <-serviceResults:
 						wr.CommandReturns = append(wr.CommandReturns, res)
 					}
 				}

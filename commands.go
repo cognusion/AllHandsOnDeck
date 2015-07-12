@@ -105,3 +105,14 @@ func executeCommand(cmd string, host Host, config *ssh.ClientConfig, sudo bool) 
 	return cr
 
 }
+
+func serviceList(op string, list []string, res chan<- CommandReturn, host Host, config *ssh.ClientConfig, sudo bool) {
+	for _, p := range list {
+		serviceCommand := "service " + p + " " + op
+
+		go func(host Host) {
+			res <- executeCommand(serviceCommand, host, config, sudo)
+		}(host)
+
+	}
+}
