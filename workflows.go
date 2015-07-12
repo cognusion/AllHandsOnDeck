@@ -4,6 +4,7 @@ package main
 
 import (
 	"golang.org/x/crypto/ssh"
+	"log"
 	"strings"
 )
 
@@ -35,17 +36,18 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 	}
 
 	for i, c := range w.Commands {
+
 		// Handle workflow special commands
-		if strings.HasPrefix(c, "FOR "){
+		if strings.HasPrefix(c, "FOR ") {
 			// FOR list ACTION
-			
+
 			cparts := strings.Split(c, " ")
-			
 			if len(cparts) < 3 {
 				// Hmmm, malformated FOR
+				log.Printf("'FOR list ACTION' statement incomplete: '%s'\n", c)
 				return wr //?
 			}
-			
+
 			var list []string
 
 			// Set up our list
@@ -61,20 +63,31 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 				list = needsRestartingMangler(listRes.StdoutStrings())
 			} else {
 				// Treat the middle of cparts as actual list items
-				list = cparts[1:len(cparts)-2]
+				var newList []string
+				for _, tc := range cparts[1 : len(cparts)-1] {
+					if strings.Contains(tc, ",") {
+						// Handle comma hell
+						tc = strings.TrimSuffix(tc, ",") // Nuke trailing commas
+						nl := strings.Split(tc, ",")     // Split out any comma-sep
+						newList = sliceAppend(newList, nl)
+					} else {
+						newList = append(newList, tc)
+					}
+				}
+				list = newList
 			}
-			
+
 			// Handle our ACTIONs
 			if cparts[len(cparts)-1] == "RESTART" ||
-				 cparts[len(cparts)-1] == "START" || 
-				 cparts[len(cparts)-1] == "STOP" ||
-				 cparts[len(cparts)-1] == "STATUS"{
+				cparts[len(cparts)-1] == "START" ||
+				cparts[len(cparts)-1] == "STOP" ||
+				cparts[len(cparts)-1] == "STATUS" {
 				// Service operation requested.
 
 				op := strings.ToLower(cparts[len(cparts)-1])
-				
+
 				serviceResults := make(chan CommandReturn, 10)
-				
+
 				serviceList(op, list, serviceResults, host, config, sudo)
 
 				for li := 0; li < len(list); li++ {

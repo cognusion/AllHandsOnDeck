@@ -19,6 +19,7 @@ func loadConfigs(srcDir string) Config {
 }
 
 func readDirectory(srcDir string) []string {
+	// We can skip this error, since our pattern is fixed and known-good.
 	files, _ := filepath.Glob(srcDir + "*.json")
 	return files
 }
@@ -27,7 +28,7 @@ func loadFile(filePath string, conf Config) Config {
 
 	buf, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error reading config file '%s': %s\n", filePath, err)
 	}
 
 	// In any language but Go, the below would concerningly
@@ -35,7 +36,7 @@ func loadFile(filePath string, conf Config) Config {
 	// automagically.
 	err = json.Unmarshal(buf, &conf)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error parsing JSON in config file '%s': %s\n", filePath, err)
 	}
 
 	return conf
@@ -87,4 +88,19 @@ func needsRestartingMangler(plist []string) []string {
 	}
 
 	return initList
+}
+
+func sliceAppend(slice []string, elements []string) []string {
+	n := len(slice)
+	total := len(slice) + len(elements)
+	if total > cap(slice) {
+		// Reallocate. Grow to 1.5 times the new size, so we can still grow.
+		newSize := total*3/2 + 1
+		newSlice := make([]string, total, newSize)
+		copy(newSlice, slice)
+		slice = newSlice
+	}
+	slice = slice[:total]
+	copy(slice[n:], elements)
+	return slice
 }

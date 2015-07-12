@@ -67,10 +67,10 @@ func executeCommand(cmd string, host Host, config *ssh.ClientConfig, sudo bool) 
 	if host.Port != 0 {
 		port = strconv.Itoa(host.Port)
 	}
-	
+
 	conn, err := ssh.Dial("tcp", connectName+":"+port, config)
 	if err != nil {
-		log.Printf("Dial for %s failed", connectName+":"+port)
+		log.Printf("Connection to %s on port %s failed: %s\n", connectName, port, err)
 		cr.Error = err
 		return cr
 	}
@@ -87,7 +87,7 @@ func executeCommand(cmd string, host Host, config *ssh.ClientConfig, sudo bool) 
 		}
 		// Request pseudo terminal
 		if err := session.RequestPty("xterm", 80, 80, modes); err != nil {
-			log.Printf("request for pseudo terminal failed: %s", err)
+			log.Printf("Request for pseudo terminal on %s failed: %s", connectName, err)
 			cr.Error = err
 			return cr
 		}
@@ -99,7 +99,7 @@ func executeCommand(cmd string, host Host, config *ssh.ClientConfig, sudo bool) 
 	session.Stderr = &cr.Stderr
 	err = session.Run(cmd)
 	if err != nil {
-		log.Printf("execution of command failed: %s", err)
+		log.Printf("Execution of command failed on %s: %s", connectName, err)
 		cr.Error = err
 	}
 	return cr

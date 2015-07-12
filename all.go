@@ -65,14 +65,14 @@ func main() {
 
 	// Handle the configs
 	if configFolder == "" {
-		log.Fatalln("configs must be set!")
+		log.Fatalln("--configs must be set!")
 	} else {
 		conf = loadConfigs(configFolder)
 	}
 
 	// We must have a command, no?
 	if cmd == "" {
-		log.Fatalln("cmd must be set!")
+		log.Fatalln("--cmd must be set!")
 	}
 
 	// If cmd is a workflow
@@ -87,7 +87,7 @@ func main() {
 			}
 		}
 		if wfIndex < 0 {
-			log.Fatalf("Workflow '%s' does not exist in specified config!\n", cmd)
+			log.Fatalf("Workflow '%s' does not exist in specified configs!\n", cmd)
 		}
 	}
 
@@ -100,7 +100,7 @@ func main() {
 		// use SSH-Agent
 		conn, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK"))
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Error connecting to the ssh-agent. It may not be running, or SSH_AUTH_SOCK may be set in this environment: %s\n", err)
 		}
 		defer conn.Close()
 		ag := agent.NewClient(conn)
@@ -110,11 +110,11 @@ func main() {
 
 		buf, err := ioutil.ReadFile(sshKey)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Error reading specified key '%s': %s\n", sshKey, err)
 		}
 		key, err := ssh.ParsePrivateKey(buf)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Error parsing specified key '%s': %s\n", sshKey, err)
 		}
 		auths = []ssh.AuthMethod{ssh.PublicKeys(key)}
 	}
