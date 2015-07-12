@@ -1,3 +1,5 @@
+// +build go1.4
+
 package main
 
 import (
@@ -22,16 +24,16 @@ var debugOut *log.Logger
 func main() {
 
 	var (
-		sshAgent   bool
-		sshKey     string
+		sshAgent     bool
+		sshKey       string
 		configFolder string
-		userName   string
-		sudo       bool
-		timeout    int
-		cmd        string
-		workflow   bool
-		filter     string
-		debug      bool
+		userName     string
+		sudo         bool
+		timeout      int
+		cmd          string
+		workflow     bool
+		filter       string
+		debug        bool
 
 		conf    Config
 		auths   []ssh.AuthMethod
@@ -46,9 +48,9 @@ func main() {
 	flag.BoolVar(&sshAgent, "sshagent", false, "Connect and use SSH-Agent vs. user key")
 	flag.StringVar(&sshKey, "sshkey", currentUser.HomeDir+"/.ssh/id_rsa", "If not using the SSH-Agent, where to grab the key")
 	flag.BoolVar(&debug, "debug", false, "Enable Debug output")
-	flag.StringVar(&configFolder, "configs", "", "Path to the folder where the config files are (*.json)")
+	flag.StringVar(&configFolder, "configs", "configs/", "Path to the folder where the config files are (*.json)")
 	flag.StringVar(&userName, "user", currentUser.Username, "User to run as")
-	flag.IntVar(&timeout, "timeout", 5, "Seconds before command times out")
+	flag.IntVar(&timeout, "timeout", 60, "Seconds before the entire operation times out")
 	flag.BoolVar(&sudo, "sudo", false, "Whether to run commands via sudo")
 	flag.BoolVar(&workflow, "workflow", false, "The --cmd is a workflow")
 	flag.StringVar(&cmd, "cmd", "", "Command to run")
@@ -56,11 +58,11 @@ func main() {
 	flag.Parse()
 
 	if debug {
-		debugOut = log.New(os.Stdout,"[DEBUG]",log.Lshortfile)
+		debugOut = log.New(os.Stdout, "[DEBUG]", log.Lshortfile)
 	} else {
-		debugOut = log.New(ioutil.Discard,"",log.Lshortfile)
+		debugOut = log.New(ioutil.Discard, "", log.Lshortfile)
 	}
-	
+
 	// Handle the configs
 	if configFolder == "" {
 		log.Fatalln("configs must be set!")
@@ -132,7 +134,7 @@ func main() {
 			continue
 		}
 
-		debugOut.Printf("Host: %s\n",host.Name)
+		debugOut.Printf("Host: %s\n", host.Name)
 
 		// Handle alternate usernames
 		configUser := userName

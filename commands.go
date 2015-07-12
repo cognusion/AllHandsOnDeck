@@ -1,3 +1,5 @@
+// +build go1.4
+
 package main
 
 import (
@@ -61,9 +63,14 @@ func executeCommand(cmd string, host Host, config *ssh.ClientConfig, sudo bool) 
 	}
 	cr.Hostname = connectName
 
-	conn, err := ssh.Dial("tcp", connectName+":"+strconv.Itoa(host.Port), config)
+	port := "22"
+	if host.Port != 0 {
+		port = strconv.Itoa(host.Port)
+	}
+	
+	conn, err := ssh.Dial("tcp", connectName+":"+port, config)
 	if err != nil {
-		log.Printf("Dial for %s failed", connectName+":"+strconv.Itoa(host.Port))
+		log.Printf("Dial for %s failed", connectName+":"+port)
 		cr.Error = err
 		return cr
 	}

@@ -1,3 +1,5 @@
+// +build go1.4
+
 package main
 
 import (
@@ -8,12 +10,12 @@ import (
 )
 
 type Host struct {
-	Port    int
 	Address string
-	Name    string
 	Arch    string
-	User string
+	Name    string
+	Port    int
 	Tags    []string
+	User    string
 }
 
 func (h *Host) SortTags() {
@@ -71,13 +73,13 @@ func (h *Host) If(cond string) bool {
 		parts := strings.Split(cond, " ")
 
 		//debugOut.Printf("\tDoes %s %s %s?\n",parts[0],parts[1],parts[2])
-		
-		// Case/swtich to check each of 
+
+		// Case/swtich to check each of
 		var found bool = false
 		if parts[0] == "Tags" {
 			found = h.SearchTags(parts[2])
 		} else if parts[0] == "Port" {
-			fport,_ := strconv.Atoi(parts[2])
+			fport, _ := strconv.Atoi(parts[2])
 			found = h.Port == fport
 		} else if parts[0] == "Address" {
 			found = h.Address == parts[2]
@@ -89,10 +91,10 @@ func (h *Host) If(cond string) bool {
 			found = h.User == parts[2]
 		} else {
 			// Hmmm...
-			debugOut.Printf("Conditional name '%s' does not exist!\n",parts[0])
+			debugOut.Printf("Conditional name '%s' does not exist!\n", parts[0])
 			return false
 		}
-		
+
 		if parts[1] == "==" && found {
 			return true
 		} else if parts[1] == "!=" && found == false {
