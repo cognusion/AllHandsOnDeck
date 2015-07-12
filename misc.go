@@ -1,8 +1,43 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"log"
+	"path/filepath"
 	"strings"
 )
+
+func loadConfigs(srcDir string) Config {
+	var conf Config
+	for _,f := range readDirectory(srcDir) {
+		conf = loadFile(f, conf)
+	}
+	return conf
+}
+
+func readDirectory(srcDir string) []string {
+    files, _ := filepath.Glob(srcDir + "*.json")
+    return files
+}
+
+func loadFile(filePath string, conf Config) Config {
+
+	buf, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// In any language but Go, the below would concerningly 
+	// overwrite the conf struct, but in Go, it "merges" 
+	// automagically.
+	err = json.Unmarshal(buf, &conf)
+	if err != nil {
+		log.Fatal(err)
+	}
+	
+	return conf
+}
 
 func needsRestartingMangler(plist []string) []string {
 

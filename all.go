@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
@@ -23,7 +22,7 @@ func main() {
 	var (
 		sshAgent   bool
 		sshKey     string
-		configFile string
+		configFolder string
 		userName   string
 		sudo       bool
 		timeout    int
@@ -45,7 +44,7 @@ func main() {
 	flag.BoolVar(&sshAgent, "sshagent", false, "Connect and use SSH-Agent vs. user key")
 	flag.StringVar(&sshKey, "sshkey", currentUser.HomeDir+"/.ssh/id_rsa", "If not using the SSH-Agent, where to grab the key")
 	flag.BoolVar(&debug, "debug", false, "Enable Debug output")
-	flag.StringVar(&configFile, "config", "", "Config file location to read and run from")
+	flag.StringVar(&configFolder, "configs", "", "Path to the folder where the config files are (*.json)")
 	flag.StringVar(&userName, "user", currentUser.Username, "User to run as")
 	flag.IntVar(&timeout, "timeout", 5, "Seconds before command times out")
 	flag.BoolVar(&sudo, "sudo", false, "Whether to run commands via sudo")
@@ -55,18 +54,10 @@ func main() {
 	flag.Parse()
 
 	// Handle the configFile
-	if configFile == "" {
-		log.Fatalln("config must be set!")
+	if configFolder == "" {
+		log.Fatalln("configs must be set!")
 	} else {
-		buf, err := ioutil.ReadFile(configFile)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = json.Unmarshal(buf, &conf)
-		if err != nil {
-			log.Fatal(err)
-		}
+		conf = loadConfigs(configFolder)
 	}
 
 	// We must have a command, no?
