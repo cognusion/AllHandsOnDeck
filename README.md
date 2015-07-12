@@ -1,5 +1,5 @@
 # AllHandsOnDeck
-All Hands On Deck (aka "all") is a simple orchestration system for Linux, written in Go. Commands are executed in parallelish, as are workflows (commands within a workflow are executed serially)
+All Hands On Deck (aka "all") is a simple orchestration system for Linux (although you can run it *from* any platform that supports Go), written in Go. Commands are executed in parallelish, as are workflows (commands within a workflow are executed serially)
 
 **This documentation is pretty awful.**
 
