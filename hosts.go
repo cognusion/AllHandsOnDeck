@@ -12,7 +12,7 @@ type Host struct {
 	Address string
 	Name    string
 	Arch    string
-	AltUser string
+	User string
 	Tags    []string
 }
 
@@ -85,8 +85,8 @@ func (h *Host) If(cond string) bool {
 			found = h.Name == parts[2]
 		} else if parts[0] == "Arch" {
 			found = h.Arch == parts[2]
-		} else if parts[0] == "AltUser" {
-			found = h.AltUser == parts[2]
+		} else if parts[0] == "User" {
+			found = h.User == parts[2]
 		} else {
 			// Hmmm...
 			debugOut.Printf("Conditional name '%s' does not exist!\n",parts[0])

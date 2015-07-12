@@ -136,8 +136,8 @@ func main() {
 
 		// Handle alternate usernames
 		configUser := userName
-		if host.AltUser != "" {
-			configUser = host.AltUser
+		if host.User != "" {
+			configUser = host.User
 		}
 
 		// SSH Config
