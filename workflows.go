@@ -55,9 +55,10 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 				// Do that voodoo that you do, for special command "needs-restarting"
 				listRes := executeCommand(cparts[1], host, config, sudo)
 				wr.CommandReturns = append(wr.CommandReturns, listRes)
-				if listRes.Error != nil && (len(w.CommandBreaks) == 0 || w.CommandBreaks[i] == true) {
-					// We have a valid error, and either we're not using CommandBreaks (assume breaks)
-					//	or we are using CommandBreaks, and they're true
+				if listRes.Error != nil {
+					// We have a valid error, and must break, as we'll have
+					//  an invalid list to operate on
+					log.Printf("needs-restarting on host %s failed: %s\n", host.Name, listRes.Error)
 					return wr
 				}
 				list = needsRestartingMangler(listRes.StdoutStrings())
