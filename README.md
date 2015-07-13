@@ -1,7 +1,7 @@
 # AllHandsOnDeck
-All Hands On Deck (aka "all") is a simple orchestration system for Linux (although you can run it *from* any platform that supports Go), written in Go. Commands are executed in parallelish, as are workflows (commands within a workflow are executed serially)
+All Hands On Deck (aka "all") is a simple agentless orchestration system written in Go, for Linux. You can run it *from* any platform that supports Go (Macs are popular, I hear). Commands are executed in parallelish, as are workflows (commands within a workflow are executed serially);
 
-**This documentation is pretty awful.**
+**This documentation is pretty awful. The in-code documentation is even worse.**
 
 Basics
 ======
@@ -46,10 +46,11 @@ all --cmd uptime --filter 'Tags == uptime'
 Configs
 =======
 
-So how would you tag your hosts? There aren't any hosts listed on that command!! Relax,
-we got this.
+So how would you tag your hosts? There aren't any hosts listed on that command up there. Relax, we got this.
 
-All reads all the .json files in the --configs folder (defaults to "configs/" for convenience). Host and Workflow config stanzas may be smattered about, and will all get merged together when All reads them.
+All reads all the .json files in the --configs folder (defaults to "configs/" for convenience). Host and Workflow config stanzas may be smattered about, and will all get merged together when All reads them. 
+
+Some utilities like giving configs fancy names so they seem like more than they are. I don't. They're still fancy, though.
 
 Host
 ----
@@ -127,10 +128,10 @@ Workflows are quite powerful, and allow you to specify:
 	]
 }
 ```
-It is worth noting that each command in a workflow is executed in order, serially, and atomically. Thus if you "cd" in one command, don't expect in a subsequent command that cwd will be where you left it. If you need such things, chain multiple commands with a semi-colon, e.g.
+It is worth noting that each command in a workflow is executed in order, serially, and atomically. Thus if you "cd" in one command, don't expect that in a subsequent command cwd will be where you left it. If you *must* do such things (there is probably a better way to do what you're thinking of), chain multiple commands with semicolons, e.g.
 
 ```bash
-"cd /tmp; mkdir X; cd X"
+"cd /tmp; mkdir X; cd X; somecommand"
 ```
 
 Filters
@@ -188,6 +189,23 @@ too, so it needs those. In any workflow, you can put a SET command in lieu of a 
 Additionally, to aid in making temp folders, etc. there is a special nugget to create random
 alpha-numeric strings of set length "n". This may be embedded anywhere in a SET string. e.g.
 
-```
+```bash
 SET %TMPDIR% /tmp/specialRAND(8)folder
 ```
+
+Forward, Ho
+===========
+
+All was written for specific purposes 2013-2014, and is being ground-up rewritten to take advantage of new Go tech, lessons learned from 2 years of using it, and lessons learned from writing lots of Go - better Go - since then. As such, All as it is here isn't complete yet. Additionally, there are some things I want to add that would have been very difficult in with the old code base. The TODO list, In no particular order:
+
+1. scp-able helper files (quazi-agents) (almost unnecessary with new workflow)
+2. Configurable output (JSON, XML, whatevs)
+3. allsh, the All shell
+4. Moar "Workflow Special Commands"
+5. Command output analysis
+6. Option to fail Workflow command on stderr content
+7. Better visibility into what is happening, including a "dryrun" facility
+
+**Pull requests are welcome**. If you're serious about wanting to hack at something here, please reach out. I may/probably have pointers or even stub code related to these.
+
+Also, feel free to add to this list, via feature requests, or their more better brethren: pull requests. :)
