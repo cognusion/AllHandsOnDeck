@@ -62,10 +62,7 @@ func needsRestartingMangler(plist []string) []string {
 			}
 
 			// Clean up control names
-			if strings.HasSuffix(cmd, ":") {
-				cmds = strings.Split(cmd, ":")
-				cmd = cmds[0]
-			}
+			cmd = strings.TrimSuffix(cmd, ":")
 
 			if cmd == "mongod" || cmd == "udevd" {
 				// Do Not Want
@@ -123,7 +120,7 @@ func sliceAppend(slice []string, elements []string) []string {
 
 func randString(size int) string {
 	chars := "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-	var bytes = make([]byte, size)
+	bytes := make([]byte, size)
 
 	rand.Read(bytes)
 	for k, v := range bytes {

@@ -93,10 +93,11 @@ func executeCommand(cmd string, host Host, config *ssh.ClientConfig, sudo bool) 
 		}
 	}
 
-	cr.Hostname = connectName
-	cr.HostObj = host
+	// Set stdout/err to our byte buffers
 	session.Stdout = &cr.Stdout
 	session.Stderr = &cr.Stderr
+
+	// Run the cmd
 	err = session.Run(cmd)
 	if err != nil {
 		log.Printf("Execution of command failed on %s: %s", connectName, err)

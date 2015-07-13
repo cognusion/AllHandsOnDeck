@@ -3,7 +3,6 @@
 package main
 
 import (
-	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -74,13 +73,18 @@ func (h *Host) If(cond string) bool {
 
 		//debugOut.Printf("\tDoes %s %s %s?\n",parts[0],parts[1],parts[2])
 
-		// Case/swtich to check each of
-		var found bool = false
+		// Case/swtich to check each of the fields
+		found := false
 		if parts[0] == "Tags" {
 			found = h.SearchTags(parts[2])
 		} else if parts[0] == "Port" {
 			fport, _ := strconv.Atoi(parts[2])
-			found = h.Port == fport
+			if h.Port != 0 {
+				found = h.Port == fport
+			} else {
+				// we started allow port to be skipped
+				found = 22 == fport
+			}
 		} else if parts[0] == "Address" {
 			found = h.Address == parts[2]
 		} else if parts[0] == "Name" {
@@ -88,6 +92,8 @@ func (h *Host) If(cond string) bool {
 		} else if parts[0] == "Arch" {
 			found = h.Arch == parts[2]
 		} else if parts[0] == "User" {
+			// caveat: We don't have access to the CLI-specified user,
+			// so this only matches a host-specified user
 			found = h.User == parts[2]
 		} else {
 			// Hmmm...
@@ -95,6 +101,7 @@ func (h *Host) If(cond string) bool {
 			return false
 		}
 
+		// Case/switch to check each operator
 		if parts[1] == "==" && found {
 			return true
 		} else if parts[1] == "!=" && found == false {
@@ -105,7 +112,4 @@ func (h *Host) If(cond string) bool {
 			return false
 		}
 	}
-
-	log.Printf("We should never get here... %s\n", cond)
-	return false
 }

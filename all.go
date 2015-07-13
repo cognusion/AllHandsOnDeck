@@ -76,7 +76,7 @@ func main() {
 	}
 
 	// If cmd is a workflow
-	//	- ensure the workflow exists
+	//  - ensure the workflow exists
 	//  - cache the location of the specified workflow
 	if workflow {
 		wfIndex = -1
@@ -92,7 +92,7 @@ func main() {
 	}
 
 	/*
-	 * We are no allowing multiple keys, or key-per-hosts. If you need to possibly use
+	 * We are not allowing multiple keys, or key-per-hosts. If you need to possibly use
 	 * multiple keys, ensure ssh-agent is running and has them added, and execute with
 	 * --sshagent
 	 */
@@ -155,7 +155,6 @@ func main() {
 		 */
 		if workflow {
 			// Workflow
-
 			go func(host Host) {
 				wfResults <- conf.Workflows[wfIndex].Exec(host, config, sudo)
 			}(host)
@@ -177,6 +176,8 @@ func main() {
 				if res.Completed == false {
 					log.Printf("Workflow %s did not fully complete\n", res.Name)
 				}
+
+				// Process all of the enclosed CommandReturns
 				for _, c := range res.CommandReturns {
 					c.Process()
 				}
