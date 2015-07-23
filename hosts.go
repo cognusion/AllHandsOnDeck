@@ -107,8 +107,6 @@ func (h *Host) If(cond string) bool {
 		} else if parts[1] == "!=" && found == false {
 			return true
 		} else {
-			// Hmmm...
-			debugOut.Printf("Operator '%s' does not exist!\n", parts[1])
 			return false
 		}
 	}
