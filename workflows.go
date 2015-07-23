@@ -36,7 +36,7 @@ func (w *Workflow) varParse(s string) string {
 			s = strings.Replace(s, nk, v, -1)
 		}
 	}
-	
+
 	// Then the workflow list
 	for k, v := range w.vars {
 		nk := "%" + k + "%"
@@ -44,7 +44,7 @@ func (w *Workflow) varParse(s string) string {
 			s = strings.Replace(s, nk, v, -1)
 		}
 	}
-	
+
 	return s
 }
 
@@ -72,16 +72,16 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 			// %%anotherworkflowname
 			log.Printf("Chaining workflows currently unsupported!\n")
 			return wr
-				
+
 			/*
-			flow := strings.TrimPrefix(c, "%%")
-			flowIndex := conf.WorkflowIndex(flow)
-			if flowIndex < 0 {
-				log.Printf("Chained workflow '%s' does not exist in specified configs!\n", flow)
-				return wr
-			}
+				flow := strings.TrimPrefix(c, "%%")
+				flowIndex := conf.WorkflowIndex(flow)
+				if flowIndex < 0 {
+					log.Printf("Chained workflow '%s' does not exist in specified configs!\n", flow)
+					return wr
+				}
 			*/
-			
+
 		} else if strings.HasPrefix(c, "SET ") {
 			// SET %varname% "some string"
 
@@ -99,7 +99,7 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 
 			if strings.Contains(vvalue, "S3(") {
 				// We need a tokened S3 URL
-				
+
 				// Confirm we actually have the bits set
 				if _, ok := globalVars["awsaccess_key"]; ok == false {
 					log.Printf("No AWS access key set, but S3() called\n")
@@ -108,21 +108,21 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 					log.Printf("No AWS secret key set, but S3() called\n")
 					return wr
 				}
-				
+
 				re := regexp.MustCompile(`^(.*)S3\((.*)\)(.*)$`)
 				rparts := re.FindStringSubmatch(vvalue)
 				if rparts == nil {
 					log.Printf("Error processing S3(s): '%s'\n", vvalue)
 					return wr
 				}
-				
-				bucket,filePath,_ := s3UrlToParts(rparts[2])
-				url := generateS3Url(bucket, filePath, 
-					globalVars["awsaccess_key"], globalVars["awsaccess_secretkey"], 
-					"" , 60)
-					
+
+				bucket, filePath, _ := s3UrlToParts(rparts[2])
+				url := generateS3Url(bucket, filePath,
+					globalVars["awsaccess_key"], globalVars["awsaccess_secretkey"],
+					"", 60)
+
 				vvalue = rparts[1] + url + rparts[3]
-				
+
 			} else if strings.Contains(vvalue, "RAND(") {
 				// We need a random string
 				re := regexp.MustCompile(`^(.*)RAND\(([0-9]+)\)(.*)$`)

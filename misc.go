@@ -18,7 +18,7 @@ type Misc struct {
 
 func miscToMap(miscs []Misc) map[string]string {
 	mss := make(map[string]string)
-	for _,m := range miscs {
+	for _, m := range miscs {
 		mss[m.Name] = m.Value
 	}
 	return mss

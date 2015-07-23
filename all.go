@@ -85,7 +85,7 @@ func main() {
 	} else {
 		// Load the conf object
 		conf = loadConfigs(configFolder)
-		
+
 		// Build any needed global vars
 		globalVars = miscToMap(conf.Miscs)
 	}
