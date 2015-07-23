@@ -19,10 +19,10 @@ Usage of ./all:
   -filter="": Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)
   -quiet=false: Suppress most-if-not-all normal output
   -sshagent=false: Connect and use SSH-Agent vs. user key
-  -sshkey="/home/you/.ssh/id_rsa": If not using the SSH-Agent, where to grab the key
+  -sshkey="/home/<current user>/.ssh/id_rsa": If not using the SSH-Agent, where to grab the key
   -sudo=false: Whether to run commands via sudo
   -timeout=60: Seconds before the entire operation times out
-  -user="you": User to run as
+  -user="<current user>": User to run as
   -workflow=false: The --cmd is a workflow
 ```
 

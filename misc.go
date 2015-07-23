@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+// Misc is a simple key/value structure
 type Misc struct {
 	Name  string
 	Value string

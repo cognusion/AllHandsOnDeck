@@ -1,5 +1,26 @@
 // +build go1.4
 
+/*
+All Hands On Deck (aka "all") is a simple agentless orchestration system written 
+in Go, for Linux. You can run it *from* any platform that supports Go (Macs are 
+popular, I hear). Commands are executed in parallelish, as are workflows (commands 
+within a workflow are executed serially)
+
+Usage of ./all:
+  -cmd="": Command to run
+  -configdump=false: Load and parse configs, dump them to output and exit
+  -configs="configs/": Path to the folder where the config files are (*.json)
+  -configtest=false: Load and parse configs, and exit
+  -debug=false: Enable Debug output
+  -filter="": Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)
+  -quiet=false: Suppress most-if-not-all normal output
+  -sshagent=false: Connect and use SSH-Agent vs. user key
+  -sshkey="/Users/<current user>/.ssh/id_rsa": If not using the SSH-Agent, where to grab the key
+  -sudo=false: Whether to run commands via sudo
+  -timeout=60: Seconds before the entire operation times out
+  -user="<current user>": User to run as
+  -workflow=false: The --cmd is a workflow
+*/
 package main
 
 import (
@@ -15,18 +36,22 @@ import (
 	"time"
 )
 
+// Config is a toplevel struct to house arrays of Hosts, Workflows, and Miscs
 type Config struct {
 	Hosts     []Host
 	Workflows []Workflow
 	Miscs     []Misc
 }
 
+// Merge properly merges the provided Config, into the parent Config
 func (c *Config) Merge(conf Config) {
 	c.Hosts = append(c.Hosts, conf.Hosts...)
 	c.Workflows = append(c.Workflows, conf.Workflows...)
 	c.Miscs = append(c.Miscs, conf.Miscs...)
 }
 
+// WorkflowIndex finds the named workflow in the Config, and 
+// returns its index, or -1 if it is not found
 func (c *Config) WorkflowIndex(workflow string) int {
 	var flowIndex int = -1
 	for i, wf := range c.Workflows {

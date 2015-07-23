@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// CommandReturn is a structure returned after executing a command
 type CommandReturn struct {
 	Hostname string
 	HostObj  Host
@@ -19,22 +20,27 @@ type CommandReturn struct {
 	Stderr   bytes.Buffer
 }
 
+// StdoutString return the Stdout buffer as a string
 func (cr *CommandReturn) StdoutString() string {
 	return cr.Stdout.String()
 }
 
+// StderrString return the Stderr buffer as a string
 func (cr *CommandReturn) StderrString() string {
 	return cr.Stderr.String()
 }
 
+// StdoutStrings return the Stdout buffer as a string array
 func (cr *CommandReturn) StdoutStrings() []string {
 	return strings.Split(cr.Stdout.String(), "\n")
 }
 
+// StderrStrings return the Stderr buffer as a string array
 func (cr *CommandReturn) StderrStrings() []string {
 	return strings.Split(cr.Stderr.String(), "\n")
 }
 
+// Process inspected the CommandReturn and outputs structured information about it
 func (cr *CommandReturn) Process() {
 	if strings.Contains(cr.Command, "needs-restarting") {
 		plist := needsRestartingMangler(cr.StdoutStrings())

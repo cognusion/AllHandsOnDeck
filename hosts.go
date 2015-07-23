@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// Host is a structure to capture properties of individual systems
 type Host struct {
 	Address string
 	Arch    string
@@ -17,31 +18,32 @@ type Host struct {
 	User    string
 }
 
+// SortTags sorts the Host's Tags array in alphanumeric order
 func (h *Host) SortTags() {
 	if sort.StringsAreSorted(h.Tags) == false {
 		sort.Strings(h.Tags)
 	}
 }
 
+// SearchTags iterates over the Tags array and return true/false if the requested tag is found
 func (h *Host) SearchTags(tag string) bool {
-
 	for _, t := range h.Tags {
 		if t == tag {
-			//debugOut.Printf("%s: Found %s!\n",h.Name,tag)
 			return true
 		}
 	}
-	//debugOut.Printf("%s: Didn't find %s\n",h.Name,tag)
 	return false
 }
 
 /*
-	Tags == "dev" and Tags == "httpd" or Tags == "haproxy" or Tags == "tomcat" and Tags == "daisy"
+	If takes a condition list ("filter") and applies it to the Host.
+	Tags == dev and Tags == httpd or Tags == haproxy or Tags == tomcat and Tags == daisy
 
-	1 Tags == "dev"
-	3 Tags == "httpd" or Tags == "haproxy" or Tags == "tomcat"
-	2 Tags == "daisy"
-
+	Tags == dev
+	&&
+	Tags == httpd or Tags == haproxy or Tags == tomcat
+	&&
+	Tags == daisy
 */
 func (h *Host) If(cond string) bool {
 

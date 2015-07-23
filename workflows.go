@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// WorkflowReturn is a structure returned after executing a workflow
 type WorkflowReturn struct {
 	Name           string
 	HostObj        Host
@@ -17,6 +18,7 @@ type WorkflowReturn struct {
 	CommandReturns []CommandReturn
 }
 
+// Workflow is a structure to capture properties of an individual workflow
 type Workflow struct {
 	Filter        string
 	Name          string
@@ -48,6 +50,7 @@ func (w *Workflow) varParse(s string) string {
 	return s
 }
 
+// Exec executes a workflow against the supplied Host
 func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) WorkflowReturn {
 
 	var wr WorkflowReturn
