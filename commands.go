@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"golang.org/x/crypto/ssh"
 	"log"
 	"strconv"
@@ -44,16 +45,16 @@ func (cr *CommandReturn) StderrStrings() []string {
 func (cr *CommandReturn) Process() {
 	if strings.Contains(cr.Command, "needs-restarting") {
 		plist := needsRestartingMangler(cr.StdoutStrings())
-		log.Printf("%s: %s\n%v\n", cr.Hostname, cr.Command, plist)
+		fmt.Printf("%s: %s\n%v\n", cr.Hostname, cr.Command, plist)
 	} else {
-		log.Printf("%s: %s\n", cr.Hostname, cr.Command) 
+		fmt.Printf("%s: %s\n", cr.Hostname, cr.Command) 
 		if cr.Stdout.Len() > 0 {
-			log.Printf("STDOUT:\n%s\n", cr.StdoutString())
+			fmt.Printf("STDOUT:\n%s\n", cr.StdoutString())
 		}
 		if cr.Stderr.Len() > 0 {
-			log.Printf("STDERR:\n%s\n", cr.StderrString())
+			fmt.Printf("STDERR:\n%s\n", cr.StderrString())
 		}
-		log.Println("END")
+		fmt.Println("END")
 	}
 }
 
@@ -123,7 +124,20 @@ func executeCommand(cmd string, host Host, config *ssh.ClientConfig, sudo bool) 
 }
 
 func serviceList(op string, list []string, res chan<- CommandReturn, host Host, config *ssh.ClientConfig, sudo bool) {
+	
+	// sshd needs to restart first, completely, before other things fly
 	for _, p := range list {
+		if p == "sshd" {
+			serviceCommand := "service " + p + " " + op + "; sleep 2"
+			res <- executeCommand(serviceCommand, host, config, sudo)
+		}
+	}
+	
+	for _, p := range list {
+		if p == "sshd" {
+			// Skip sshd, as we've already restarted it above, if appropriate
+			continue
+		}
 		serviceCommand := "service " + p + " " + op
 
 		go func(host Host) {

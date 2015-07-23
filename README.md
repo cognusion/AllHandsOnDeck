@@ -39,7 +39,7 @@ It may be necessary to run some commands via sudo, which is similarly trivial.
 ```bash
 all --cmd 'uptime; whoami' --sudo
 ```
-Although sudo does require a pseudo-terminal, and the user needs permission to execute the commands requests.
+Although sudo does require a pseudo-terminal, and the user needs permission to execute the commands requested.
 
 To that end, maybe running All on *all* your hosts isn't a grand idea, so perhaps you'll tag the hosts you want to allow the 'uptime' command to run on, with the tag 'uptime', then you can do:
 ```bash
