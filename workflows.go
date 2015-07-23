@@ -116,7 +116,7 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 					return wr
 				}
 				
-				bucket,filePath := s3UrlToParts(rparts[2])
+				bucket,filePath,_ := s3UrlToParts(rparts[2])
 				url := generateS3Url(bucket, filePath, 
 					globalVars["awsaccess_key"], globalVars["awsaccess_secretkey"], 
 					"" , 60)
