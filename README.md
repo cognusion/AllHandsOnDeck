@@ -209,7 +209,7 @@ SET %MYURL% S3(s3://mybucket/myfile.mov)
 Some Things You Haven't Asked Yet
 =================================
 
-### Semicolons & Sessions
+## Semicolons & Sessions
 
 All is a remote shell interface, as such pretty much anything you can do on a single shell (probably BASH) line, you can do in a single All command. You can use semicolons to separate statements just like you can in a shell, and they will act how you would expect.
 
@@ -222,7 +222,7 @@ myserver
 Every command in All is executed as a unique session to the remote host, so if you need to ensure same-session execution of commands, use semicolons. 
 
 
-### Timeouts
+## Timeouts
 
 Timeouts in All may not work how you expect them to. They are not per-command, or per-session, or per-host, or per-workflow: They are per-All-operation. So if you specify a 5 second timeout, and are asking 1000 hosts to execute 16 commands in a workflow, they've all got 5 seconds before All bails, and who-knows-what ends up happening on-systems. For that reason, a "mintimeout" is available in each workflow, to automatically bump the timeout if it isn't already. This should generally be generously high.
 
