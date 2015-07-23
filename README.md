@@ -13,6 +13,7 @@ go build -o all
 Usage of ./all:
   -cmd="": Command to run
   -configs="configs/": Path to the folder where the config files are (*.json)
+  -configtest=false: Load and parse configs, and exit
   -debug=false: Enable Debug output
   -filter="": Boolean expression to positively filter on Tags
   -sshagent=false: Connect and use SSH-Agent vs. user key
