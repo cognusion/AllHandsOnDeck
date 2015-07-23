@@ -17,9 +17,23 @@ import (
 type Config struct {
 	Hosts     []Host
 	Workflows []Workflow
+	Miscs     []Misc
+}
+
+func (c *Config) WorkflowIndex(workflow string) int {
+	var flowIndex int = -1
+	for i, wf := range c.Workflows {
+		if wf.Name == workflow {
+			flowIndex = i
+			break
+		}
+	}
+	return flowIndex
 }
 
 var debugOut *log.Logger
+
+var globalVars map[string]string
 
 func main() {
 
@@ -33,6 +47,7 @@ func main() {
 		cmd          string
 		workflow     bool
 		filter       string
+		configTest   bool
 		debug        bool
 
 		conf    Config
@@ -48,6 +63,7 @@ func main() {
 	flag.BoolVar(&sshAgent, "sshagent", false, "Connect and use SSH-Agent vs. user key")
 	flag.StringVar(&sshKey, "sshkey", currentUser.HomeDir+"/.ssh/id_rsa", "If not using the SSH-Agent, where to grab the key")
 	flag.BoolVar(&debug, "debug", false, "Enable Debug output")
+	flag.BoolVar(&configTest, "configtest", false, "Load and parse configs, and exit")
 	flag.StringVar(&configFolder, "configs", "configs/", "Path to the folder where the config files are (*.json)")
 	flag.StringVar(&userName, "user", currentUser.Username, "User to run as")
 	flag.IntVar(&timeout, "timeout", 60, "Seconds before the entire operation times out")
@@ -67,7 +83,11 @@ func main() {
 	if configFolder == "" {
 		log.Fatalln("--configs must be set!")
 	} else {
+		// Load the conf object
 		conf = loadConfigs(configFolder)
+		
+		// Build any needed global vars
+		globalVars = miscToMap(conf.Miscs)
 	}
 
 	// We must have a command, no?
@@ -79,13 +99,7 @@ func main() {
 	//  - ensure the workflow exists
 	//  - cache the location of the specified workflow
 	if workflow {
-		wfIndex = -1
-		for i, wf := range conf.Workflows {
-			if wf.Name == cmd {
-				wfIndex = i
-				break
-			}
-		}
+		wfIndex = conf.WorkflowIndex(cmd)
 		if wfIndex < 0 {
 			log.Fatalf("Workflow '%s' does not exist in specified configs!\n", cmd)
 		}
@@ -117,6 +131,12 @@ func main() {
 			log.Fatalf("Error parsing specified key '%s': %s\n", sshKey, err)
 		}
 		auths = []ssh.AuthMethod{ssh.PublicKeys(key)}
+	}
+
+	if configTest {
+		// Just kicking the tires...
+		log.Println("Config loaded and bootstrapped successfully...")
+		os.Exit(0)
 	}
 
 	hostCount := len(conf.Hosts)
@@ -159,6 +179,10 @@ func main() {
 				wfResults <- conf.Workflows[wfIndex].Exec(host, config, sudo)
 			}(host)
 
+			// Also, if there is a mintimeout, let's maybe use it
+			if conf.Workflows[wfIndex].MinTimeout > timeout {
+				timeout = conf.Workflows[wfIndex].MinTimeout
+			}
 		} else {
 			// Command
 			go func(host Host) {

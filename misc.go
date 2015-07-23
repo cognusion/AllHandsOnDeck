@@ -11,6 +11,19 @@ import (
 	"strings"
 )
 
+type Misc struct {
+	Name  string
+	Value string
+}
+
+func miscToMap(miscs []Misc) map[string]string {
+	mss := make(map[string]string)
+	for _,m := range miscs {
+		mss[m.Name] = m.Value
+	}
+	return mss
+}
+
 func loadConfigs(srcDir string) Config {
 	var conf Config
 	for _, f := range readDirectory(srcDir) {

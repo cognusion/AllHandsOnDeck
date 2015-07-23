@@ -102,6 +102,7 @@ Configs may also declare "workflows". A workflow is simply a named list of comma
 ```
 Workflows are quite powerful, and allow you to specify:
 * Filter - An optional filter string. More on this later
+* MinTimeout - An optional number of seconds a workflow should at the very least run for
 * Name - Whatever you want to call the workflow
 * Sudo - If this workflow must run via sudo, set this to 'true'
 * Commands - An ordered list of commands
@@ -114,6 +115,7 @@ Workflows are quite powerful, and allow you to specify:
 			"name": "yumupdateall",
 			"filter": "Tags != noupdate and Tags == yum or Tags == azl and Name != ugly",
 			"sudo": true,
+			"mintimeout": 600,
 			"commands": [
 				"yum clean all",
 				"yum update -y",
@@ -192,6 +194,37 @@ alpha-numeric strings of set length "n". This may be embedded anywhere in a SET 
 ```bash
 SET %TMPDIR% /tmp/specialRAND(8)folder
 ```
+
+### S3
+
+    S3(s)
+    
+You can specify an AWS S3 URL (e.g. s3://bucketname/some/file/some/where) and if you have an AWS access and secret key specified in the configs, a time-expiring (60 minute) URL will automagically be created.
+
+```bash
+SET %MYURL% S3(s3://mybucket/myfile.mov)
+```
+
+Some Things You Haven't Asked Yet
+=================================
+
+### Semicolons & Sessions
+
+All is a remote shell interface, as such pretty much anything you can do on a single shell (probably BASH) line, you can do in a single All command. You can use semicolons to separate statements just like you can in a shell, and they will act how you would expect.
+
+```bash
+# hostname;uptime
+myserver
+23:20  up 57 mins, 2 users, load averages: 1.37 1.37 1.27
+```
+
+Every command in All is executed as a unique session to the remote host, so if you need to ensure same-session execution of commands, use semicolons. 
+
+
+### Timeouts
+
+Timeouts in All may not work how you expect them to. They are not per-command, or per-session, or per-host, or per-workflow: They are per-All-operation. So if you specify a 5 second timeout, and are asking 1000 hosts to execute 16 commands in a workflow, they've all got 5 seconds before All bails, and who-knows-what ends up happening on-systems. For that reason, a "mintimeout" is available in each workflow, to automatically bump the timeout if it isn't already. This should generally be generously high.
+
 
 Forward, Ho
 ===========
