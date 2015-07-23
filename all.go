@@ -4,6 +4,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"io/ioutil"
@@ -18,6 +19,12 @@ type Config struct {
 	Hosts     []Host
 	Workflows []Workflow
 	Miscs     []Misc
+}
+
+func (c *Config) Merge(conf Config) {
+	c.Hosts = append(c.Hosts, conf.Hosts...)
+	c.Workflows = append(c.Workflows, conf.Workflows...)
+	c.Miscs = append(c.Miscs, conf.Miscs...)
 }
 
 func (c *Config) WorkflowIndex(workflow string) int {
@@ -139,11 +146,11 @@ func main() {
 
 	if configDump {
 		// Dump the config
-		log.Println(conf)
+		fmt.Println(dumpConfigs(conf))
 		os.Exit(0)
 	} else if configTest {
 		// Just kicking the tires...
-		log.Println("Config loaded and bootstrapped successfully...")
+		fmt.Println("Config loaded and bootstrapped successfully...")
 		os.Exit(0)
 	}
 

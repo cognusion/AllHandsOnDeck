@@ -24,6 +24,11 @@ func miscToMap(miscs []Misc) map[string]string {
 	return mss
 }
 
+func dumpConfigs(conf Config) string {
+	j,_ := json.MarshalIndent(conf,"","\t")
+	return string(j)
+}
+
 func loadConfigs(srcDir string) Config {
 	var conf Config
 	debugOut.Printf("Looking for configs in '%s'\n", srcDir)
@@ -47,14 +52,13 @@ func loadFile(filePath string, conf Config) Config {
 		log.Fatalf("Error reading config file '%s': %s\n", filePath, err)
 	}
 
-	// In any language but Go, the below would concerningly
-	// overwrite the conf struct, but in Go, it "merges"
-	// automagically.
-	err = json.Unmarshal(buf, &conf)
+	var newConf Config
+	err = json.Unmarshal(buf, &newConf)
 	if err != nil {
 		log.Fatalf("Error parsing JSON in config file '%s': %s\n", filePath, err)
 	}
-
+	
+	conf.Merge(newConf)
 	return conf
 }
 
@@ -125,6 +129,7 @@ func needsRestartingMangler(plist []string) []string {
 	return initList
 }
 
+// given a list of strings, explode any comma-lists embedded therein
 func makeList(list []string) []string {
 	var newList []string
 	for _, tc := range list {
@@ -132,27 +137,12 @@ func makeList(list []string) []string {
 			// Handle comma hell
 			tc = strings.TrimSuffix(tc, ",") // Nuke trailing commas
 			nl := strings.Split(tc, ",")     // Split out any comma-sep
-			newList = sliceAppend(newList, nl)
+			newList = append(newList, nl...)
 		} else {
 			newList = append(newList, tc)
 		}
 	}
 	return newList
-}
-
-func sliceAppend(slice []string, elements []string) []string {
-	n := len(slice)
-	total := len(slice) + len(elements)
-	if total > cap(slice) {
-		// Reallocate. Grow to 1.5 times the new size, so we can still grow.
-		newSize := total*3/2 + 1
-		newSlice := make([]string, total, newSize)
-		copy(newSlice, slice)
-		slice = newSlice
-	}
-	slice = slice[:total]
-	copy(slice[n:], elements)
-	return slice
 }
 
 func randString(size int) string {
