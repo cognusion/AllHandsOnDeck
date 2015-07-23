@@ -48,6 +48,8 @@ func main() {
 		workflow     bool
 		filter       string
 		configTest   bool
+		quiet        bool
+		configDump   bool
 		debug        bool
 
 		conf    Config
@@ -69,8 +71,10 @@ func main() {
 	flag.IntVar(&timeout, "timeout", 60, "Seconds before the entire operation times out")
 	flag.BoolVar(&sudo, "sudo", false, "Whether to run commands via sudo")
 	flag.BoolVar(&workflow, "workflow", false, "The --cmd is a workflow")
+	flag.BoolVar(&quiet, "quiet", false, "Suppress most-if-not-all normal output")
+	flag.BoolVar(&configDump, "configdump", false, "Load and parse configs, dump them to output and exit")
 	flag.StringVar(&cmd, "cmd", "", "Command to run")
-	flag.StringVar(&filter, "filter", "", "Boolean expression to positively filter on Tags")
+	flag.StringVar(&filter, "filter", "", "Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)")
 	flag.Parse()
 
 	if debug {
@@ -133,7 +137,11 @@ func main() {
 		auths = []ssh.AuthMethod{ssh.PublicKeys(key)}
 	}
 
-	if configTest {
+	if configDump {
+		// Dump the config
+		log.Println(conf)
+		os.Exit(0)
+	} else if configTest {
 		// Just kicking the tires...
 		log.Println("Config loaded and bootstrapped successfully...")
 		os.Exit(0)
@@ -201,9 +209,11 @@ func main() {
 					log.Printf("Workflow %s did not fully complete\n", res.Name)
 				}
 
-				// Process all of the enclosed CommandReturns
-				for _, c := range res.CommandReturns {
-					c.Process()
+				if quiet == false {
+					// Process all of the enclosed CommandReturns
+					for _, c := range res.CommandReturns {
+						c.Process()
+					}
 				}
 			case <-time.After(time.Duration(timeout) * time.Second):
 				log.Println("Workflow operation timed out!")
@@ -213,7 +223,9 @@ func main() {
 			// Command
 			select {
 			case res := <-commandResults:
-				res.Process()
+				if quiet == false {
+					res.Process()
+				}
 			case <-time.After(time.Duration(timeout) * time.Second):
 				log.Println("Command operation timed out!")
 				return

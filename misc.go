@@ -26,7 +26,9 @@ func miscToMap(miscs []Misc) map[string]string {
 
 func loadConfigs(srcDir string) Config {
 	var conf Config
+	debugOut.Printf("Looking for configs in '%s'\n", srcDir)
 	for _, f := range readDirectory(srcDir) {
+		debugOut.Printf("\tReading config '%s'\n", f)
 		conf = loadFile(f, conf)
 	}
 	return conf
@@ -61,6 +63,14 @@ func needsRestartingMangler(plist []string) []string {
 	// We make a map to get free dedup prior to listing
 	initMap := make(map[string]bool)
 	var initList []string
+	var dontrestart []string
+
+	if _, ok := globalVars["dontrestart-processes"]; ok {
+		dontrestart = strings.Split(globalVars["dontrestart-processes"], ",")
+		for i, v := range dontrestart {
+			dontrestart[i] = strings.TrimSpace(v)
+		}
+	}
 
 	for _, p := range plist {
 		cmds := strings.SplitN(p, " : ", 2)
@@ -77,8 +87,22 @@ func needsRestartingMangler(plist []string) []string {
 			// Clean up control names
 			cmd = strings.TrimSuffix(cmd, ":")
 
-			if cmd == "mongod" || cmd == "udevd" {
-				// Do Not Want
+			// See if we need to skip this
+			skip := false
+			for _, v := range dontrestart {
+				if v == cmd {
+					skip = true
+					break
+				}
+			}
+			if skip {
+				continue
+			}
+
+			if cmd == "sshd" && (strings.Contains(p, "[priv]") || strings.Contains(p, "@pts")) {
+				// skip sshd if it's just connections
+			} else if cmd == "sendmail" {
+				initMap["sendmail"] = true
 			} else if cmd == "haproxy" {
 				initMap["haproxy"] = true
 			} else if cmd == "java" && strings.Contains(p, "catalina") {

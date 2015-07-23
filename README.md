@@ -12,10 +12,12 @@ go build -o all
 ./all --help
 Usage of ./all:
   -cmd="": Command to run
+  -configdump=false: Load and parse configs, dump them to output and exit
   -configs="configs/": Path to the folder where the config files are (*.json)
   -configtest=false: Load and parse configs, and exit
   -debug=false: Enable Debug output
-  -filter="": Boolean expression to positively filter on Tags
+  -filter="": Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)
+  -quiet=false: Suppress most-if-not-all normal output
   -sshagent=false: Connect and use SSH-Agent vs. user key
   -sshkey="/home/you/.ssh/id_rsa": If not using the SSH-Agent, where to grab the key
   -sudo=false: Whether to run commands via sudo
@@ -51,7 +53,7 @@ So how would you tag your hosts? There aren't any hosts listed on that command u
 
 All reads all the .json files in the --configs folder (defaults to "configs/" for convenience). Host and Workflow config stanzas may be smattered about, and will all get merged together when All reads them. 
 
-Some utilities like giving configs fancy names so they seem like more than they are. I don't. They're still fancy, though.
+Some utilities like giving configs fancy names like "recipes" or "playbooks" so they seem like more than they are. I don't. These configs are still fancy, though.
 
 Host
 ----
@@ -211,7 +213,7 @@ Some Things You Haven't Asked Yet
 
 ## Semicolons & Sessions
 
-All is a remote shell interface, as such pretty much anything you can do on a single shell (probably BASH) line, you can do in a single All command. You can use semicolons to separate statements just like you can in a shell, and they will act how you would expect.
+All is a remote shell interface, and as such pretty much anything you can do on a single shell (probably BASH) line, you can do in a single All command. You can use semicolons to separate statements just like you can in a shell, and they will act how you would expect.
 
 ```bash
 # hostname;uptime

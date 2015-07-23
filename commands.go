@@ -50,6 +50,8 @@ func executeCommand(cmd string, host Host, config *ssh.ClientConfig, sudo bool) 
 		cmd = "sudo " + cmd
 	}
 
+	debugOut.Printf("Executing command '%s'\n", cmd)
+
 	var cr CommandReturn
 	cr.HostObj = host
 	cr.Command = cmd

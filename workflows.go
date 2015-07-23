@@ -55,6 +55,8 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 	wr.HostObj = host
 	wr.Completed = false
 
+	debugOut.Printf("Executing workflow %s\n", w.Name)
+
 	// Per-wf override for sudo
 	if w.Sudo == true {
 		sudo = true
