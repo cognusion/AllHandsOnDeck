@@ -177,17 +177,15 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 			}
 
 			// Handle our ACTIONs
-			if cparts[len(cparts)-1] == "RESTART" ||
-				cparts[len(cparts)-1] == "START" ||
-				cparts[len(cparts)-1] == "STOP" ||
-				cparts[len(cparts)-1] == "STATUS" {
+			action := strings.ToLower(cparts[len(cparts)-1])
+			if action == "restart" ||
+				action == "start" ||
+				action == "stop" ||
+				action == "status" {
 				// Service operation requested.
 
-				op := strings.ToLower(cparts[len(cparts)-1])
-
 				serviceResults := make(chan CommandReturn, 10)
-
-				serviceList(op, list, serviceResults, host, config, sudo)
+				serviceList(action, list, serviceResults, host, config, sudo)
 
 				for li := 0; li < len(list); li++ {
 					select {

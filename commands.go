@@ -46,7 +46,14 @@ func (cr *CommandReturn) Process() {
 		plist := needsRestartingMangler(cr.StdoutStrings())
 		log.Printf("%s: %s\n%v\n", cr.Hostname, cr.Command, plist)
 	} else {
-		log.Printf("%s: %s\nSTDOUT:\n%s\nSTDERR:\n%s\nEND\n", cr.Hostname, cr.Command, cr.StdoutString(), cr.StderrString())
+		log.Printf("%s: %s\n", cr.Hostname, cr.Command) 
+		if cr.Stdout.Len() > 0 {
+			log.Printf("STDOUT:\n%s\n", cr.StdoutString())
+		}
+		if cr.Stderr.Len() > 0 {
+			log.Printf("STDERR:\n%s\n", cr.StderrString())
+		}
+		log.Println("END")
 	}
 }
 
