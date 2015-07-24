@@ -1,9 +1,9 @@
 // +build go1.4
 
 /*
-All Hands On Deck (aka "all") is a simple agentless orchestration system written 
-in Go, for Linux. You can run it *from* any platform that supports Go (Macs are 
-popular, I hear). Commands are executed in parallelish, as are workflows (commands 
+All Hands On Deck (aka "all") is a simple agentless orchestration system written
+in Go, for Linux. You can run it *from* any platform that supports Go (Macs are
+popular, I hear). Commands are executed in parallelish, as are workflows (commands
 within a workflow are executed serially)
 
 Usage of ./all:
@@ -50,7 +50,7 @@ func (c *Config) Merge(conf Config) {
 	c.Miscs = append(c.Miscs, conf.Miscs...)
 }
 
-// WorkflowIndex finds the named workflow in the Config, and 
+// WorkflowIndex finds the named workflow in the Config, and
 // returns its index, or -1 if it is not found
 func (c *Config) WorkflowIndex(workflow string) int {
 	var flowIndex int = -1

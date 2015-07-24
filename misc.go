@@ -26,7 +26,7 @@ func miscToMap(miscs []Misc) map[string]string {
 }
 
 func dumpConfigs(conf Config) string {
-	j,_ := json.MarshalIndent(conf,"","\t")
+	j, _ := json.MarshalIndent(conf, "", "\t")
 	return string(j)
 }
 
@@ -58,7 +58,7 @@ func loadFile(filePath string, conf Config) Config {
 	if err != nil {
 		log.Fatalf("Error parsing JSON in config file '%s': %s\n", filePath, err)
 	}
-	
+
 	conf.Merge(newConf)
 	return conf
 }
