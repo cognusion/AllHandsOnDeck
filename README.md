@@ -61,6 +61,7 @@ Host
 Configs can specify hosts which can have:
 * Address - IP address of the host (optional, if Name is a valid hostname)
 * Arch - Architecture of the host (e.g. 'x86_64') (optional)
+* Loc - Location of the system (e.g. 'Denver', or 'Rack 12', or whatever) (optional)
 * Name - Name of the host. If it's a valid DNS hostname, Address may be omitted
 * Port - Which port SSH is running on. Defaults to 22.
 * Tags - Array of strings which can be used with filters.
