@@ -12,6 +12,7 @@ import (
 type Host struct {
 	Address string
 	Arch    string
+	Loc     string
 	Name    string
 	Port    int
 	Tags    []string
@@ -89,6 +90,8 @@ func (h *Host) If(cond string) bool {
 			}
 		} else if parts[0] == "Address" {
 			found = h.Address == parts[2]
+		} else if parts[0] == "Loc" {
+			found = h.Loc == parts[2]
 		} else if parts[0] == "Name" {
 			found = h.Name == parts[2]
 		} else if parts[0] == "Arch" {

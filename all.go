@@ -12,7 +12,7 @@ Usage of ./all:
   -configs="configs/": Path to the folder where the config files are (*.json)
   -configtest=false: Load and parse configs, and exit
   -debug=false: Enable Debug output
-  -filter="": Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)
+  -filter="": Boolean expression to positively filter on host elements (Tags, Name, Address, Arch[itecture], Loc[ation], User, Port, etc.)
   -quiet=false: Suppress most-if-not-all normal output
   -sshagent=false: Connect and use SSH-Agent vs. user key
   -sshkey="/Users/<current user>/.ssh/id_rsa": If not using the SSH-Agent, where to grab the key
