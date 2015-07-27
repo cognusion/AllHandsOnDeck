@@ -138,7 +138,7 @@ func serviceList(op string, list []string, res chan<- CommandReturn, host Host, 
 			// Skip sshd, as we've already restarted it above, if appropriate
 			continue
 		}
-		serviceCommand := "service " + p + " " + op + "; sleep 1"
+		serviceCommand := "service " + p + " " + op + "; sleep 2"
 
 		go func(host Host) {
 			res <- executeCommand(serviceCommand, host, config, sudo)

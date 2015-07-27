@@ -142,6 +142,14 @@ func main() {
 	}
 
 	/*
+	 * Any "miscs" config stuff here	
+	 *
+	 */
+	 if _, ok := globalVars["usesshagent"]; ok && globalVars["usesshagent"] == "true" {
+		sshAgent = true
+	}
+
+	/*
 	 * We are not allowing multiple keys, or key-per-hosts. If you need to possibly use
 	 * multiple keys, ensure ssh-agent is running and has them added, and execute with
 	 * --sshagent

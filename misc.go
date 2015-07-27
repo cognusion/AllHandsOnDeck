@@ -110,6 +110,8 @@ func needsRestartingMangler(plist []string) []string {
 				initMap["sendmail"] = true
 			} else if cmd == "haproxy" {
 				initMap["haproxy"] = true
+			} else if cmd == "ns-slapd" {
+				initMap["dirsrv"] = true
 			} else if cmd == "java" && strings.Contains(p, "catalina") {
 				initMap["tomcat"] = true
 			} else if strings.HasSuffix(cmd, "d") {
