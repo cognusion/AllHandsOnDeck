@@ -14,6 +14,7 @@ type Host struct {
 	Arch    string
 	Loc     string
 	Name    string
+	Offline bool
 	Port    int
 	Tags    []string
 	User    string

@@ -142,10 +142,10 @@ func main() {
 	}
 
 	/*
-	 * Any "miscs" config stuff here	
+	 * Any "miscs" config stuff here
 	 *
 	 */
-	 if _, ok := globalVars["usesshagent"]; ok && globalVars["usesshagent"] == "true" {
+	if _, ok := globalVars["usesshagent"]; ok && globalVars["usesshagent"] == "true" {
 		sshAgent = true
 	}
 
@@ -189,6 +189,12 @@ func main() {
 
 	hostCount := len(conf.Hosts)
 	for _, host := range conf.Hosts {
+
+		// Check to see if the host is offline
+		if host.Offline == true {
+			hostCount--
+			continue
+		}
 
 		// Check to see if the this host matches our filter
 		if filter != "" && host.If(filter) == false {

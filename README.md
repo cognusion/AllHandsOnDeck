@@ -63,6 +63,7 @@ Configs can specify hosts which can have:
 * Arch - Architecture of the host (e.g. 'x86_64') (optional)
 * Loc - Location of the system (e.g. 'Denver', or 'Rack 12', or whatever) (optional)
 * Name - Name of the host. If it's a valid DNS hostname, Address may be omitted
+* Offline - True if the host is offline and should be skipped, else omitted or false
 * Port - Which port SSH is running on. Defaults to 22.
 * Tags - Array of strings which can be used with filters.
 * User - A specific user to use when SSHing to this host. Overrides --user param.
@@ -140,6 +141,11 @@ It is worth noting that each command in a workflow is executed in order, seriall
 "cd /tmp; mkdir X; cd X; somecommand"
 ```
 
+Misc
+----
+
+TODO talk about miscs and stuff
+
 Filters
 =======
 
@@ -203,7 +209,7 @@ SET %TMPDIR% /tmp/specialRAND(8)folder
 
     S3(s)
     
-You can specify an AWS S3 URL (e.g. s3://bucketname/some/file/some/where) and if you have an AWS access and secret key specified in the configs, a time-expiring (60 minute) URL will automagically be created.
+You can specify an AWS S3 URL (e.g. s3://bucketname/some/file/some/where) and if you have an AWS access and secret key specified in the misc configs, a time-expiring (60 minute) URL will automagically be created.
 
 ```bash
 SET %MYURL% S3(s3://mybucket/myfile.mov)
