@@ -187,27 +187,26 @@ func main() {
 		os.Exit(0)
 	}
 
-	hostCount := len(conf.Hosts)
+	hostList := make(map[string]bool)
 	for _, host := range conf.Hosts {
 
 		// Check to see if the host is offline
 		if host.Offline == true {
-			hostCount--
 			continue
 		}
 
 		// Check to see if the this host matches our filter
 		if filter != "" && host.If(filter) == false {
-			hostCount--
 			continue
 		}
 
 		// Additionally, if there is a filter on the workflow, check the host against that too.
 		if workflow && conf.Workflows[wfIndex].Filter != "" && host.If(conf.Workflows[wfIndex].Filter) == false {
-			hostCount--
 			continue
 		}
 
+		// Add the host to the list, and set its return status to false
+		hostList[host.Name] = false
 		debugOut.Printf("Host: %s\n", host.Name)
 
 		// Handle alternate usernames
@@ -246,11 +245,13 @@ func main() {
 	}
 
 	// We wait for all the goros to finish up
-	for i := 0; i < hostCount; i++ {
+	for i := 0; i < len(hostList); i++ {
 		if workflow {
 			// Workflow
 			select {
 			case res := <-wfResults:
+				hostList[res.HostObj.Name] = true // returned is good enough for this
+				
 				if res.Completed == false {
 					log.Printf("Workflow %s did not fully complete\n", res.Name)
 				}
@@ -262,18 +263,32 @@ func main() {
 					}
 				}
 			case <-time.After(time.Duration(timeout) * time.Second):
-				log.Println("Workflow operation timed out!")
+				var badHosts []string
+				for h, v := range hostList {
+					if v == false {
+						badHosts = append(badHosts, h)
+					}
+				}
+				log.Printf("Workflow operation timed out! The following hosts haven't returned: %s\n", badHosts)
 				return
 			}
 		} else {
 			// Command
 			select {
 			case res := <-commandResults:
+				hostList[res.HostObj.Name] = true // returned is good enough for this
+			
 				if quiet == false {
 					res.Process()
 				}
 			case <-time.After(time.Duration(timeout) * time.Second):
-				log.Println("Command operation timed out!")
+				var badHosts []string
+				for h, v := range hostList {
+					if v == false {
+						badHosts = append(badHosts, h)
+					}
+				}
+				log.Printf("Command operation timed out! The following hosts haven't returned: %s\n", badHosts)
 				return
 			}
 		}
