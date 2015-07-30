@@ -218,6 +218,10 @@ SET %MYURL% S3(s3://mybucket/myfile.mov)
 Some Things You Haven't Asked Yet
 =================================
 
+## Running Without Filters
+
+Running a command or workflow with All, with no filters, is telling All, quite literally, "do this, on all the things". Filters limit the scope of execution. No filters: No limits.
+
 ## Semicolons & Sessions
 
 All is a remote shell interface, and as such pretty much anything you can do on a single shell (probably BASH) line, you can do in a single All command. You can use semicolons to separate statements just like you can in a shell, and they will act how you would expect.
