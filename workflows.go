@@ -170,7 +170,7 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 					log.Printf("needs-restarting on host %s failed: %s\n", host.Name, listRes.Error)
 					return wr
 				}
-				list = needsRestartingMangler(listRes.StdoutStrings())
+				list = needsRestartingMangler(listRes.StdoutStrings(true),makeList([]string{globalVars["dontrestart-processes"]}))
 			} else {
 				// Treat the middle of cparts as actual list items
 				list = makeList(cparts[1 : len(cparts)-1])

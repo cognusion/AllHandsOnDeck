@@ -63,26 +63,23 @@ func loadFile(filePath string, conf Config) Config {
 	return conf
 }
 
-func needsRestartingMangler(plist []string) []string {
+func needsRestartingMangler(plist []string, drList []string) []string {
 
 	// We make a map to get free dedup prior to listing
 	initMap := make(map[string]bool)
+	dontrestart := make(map[string]bool)
 	var initList []string
-	var dontrestart []string
 
-	if _, ok := globalVars["dontrestart-processes"]; ok {
-		dontrestart = strings.Split(globalVars["dontrestart-processes"], ",")
-		for i, v := range dontrestart {
-			dontrestart[i] = strings.TrimSpace(v)
-		}
+	for _, v := range drList {
+		dontrestart[strings.TrimSpace(v)] = true
 	}
 
 	for _, p := range plist {
+		p := strings.TrimSpace(p)
 		cmds := strings.SplitN(p, " : ", 2)
 		if len(cmds) > 1 {
 			cmds = strings.SplitN(cmds[1], " ", 2)
 			cmd := cmds[0]
-
 			// Split up pathnames
 			if strings.HasPrefix(cmd, "/") {
 				cmds = strings.Split(cmd, "/")
@@ -93,14 +90,8 @@ func needsRestartingMangler(plist []string) []string {
 			cmd = strings.TrimSuffix(cmd, ":")
 
 			// See if we need to skip this
-			skip := false
-			for _, v := range dontrestart {
-				if v == cmd {
-					skip = true
-					break
-				}
-			}
-			if skip {
+			if _, ok := dontrestart[cmd]; ok {
+				// Yup, we need to skip this
 				continue
 			}
 

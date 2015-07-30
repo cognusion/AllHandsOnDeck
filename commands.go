@@ -22,37 +22,47 @@ type CommandReturn struct {
 }
 
 // StdoutString return the Stdout buffer as a string
-func (cr *CommandReturn) StdoutString() string {
-	return cr.Stdout.String()
+func (cr *CommandReturn) StdoutString(nullToSpace bool) string {
+	if nullToSpace {
+		s := bytes.Replace(cr.Stdout.Bytes(), []byte{00}, []byte(" "), -1)
+		return string(s)
+	} else {
+		return cr.Stdout.String()
+	}
 }
 
 // StderrString return the Stderr buffer as a string
-func (cr *CommandReturn) StderrString() string {
-	return cr.Stderr.String()
+func (cr *CommandReturn) StderrString(nullToSpace bool) string {
+	if nullToSpace {
+		s := bytes.Replace(cr.Stderr.Bytes(), []byte{00}, []byte(" "), -1)
+		return string(s)
+	} else {
+		return cr.Stderr.String()
+	}
 }
 
 // StdoutStrings return the Stdout buffer as a string array
-func (cr *CommandReturn) StdoutStrings() []string {
-	return strings.Split(cr.Stdout.String(), "\n")
+func (cr *CommandReturn) StdoutStrings(nullToSpace bool) []string {
+	return strings.Split(cr.StdoutString(nullToSpace), "\n")
 }
 
 // StderrStrings return the Stderr buffer as a string array
-func (cr *CommandReturn) StderrStrings() []string {
-	return strings.Split(cr.Stderr.String(), "\n")
+func (cr *CommandReturn) StderrStrings(nullToSpace bool) []string {
+	return strings.Split(cr.StderrString(nullToSpace), "\n")
 }
 
 // Process inspected the CommandReturn and outputs structured information about it
 func (cr *CommandReturn) Process() {
 	if strings.Contains(cr.Command, "needs-restarting") {
-		plist := needsRestartingMangler(cr.StdoutStrings())
+		plist := needsRestartingMangler(cr.StdoutStrings(true), makeList([]string{globalVars["dontrestart-processes"]}))
 		fmt.Printf("%s: %s\n%v\n", cr.Hostname, cr.Command, plist)
 	} else {
-		fmt.Printf("%s: %s\n", cr.Hostname, cr.Command) 
+		fmt.Printf("%s: %s\n", cr.Hostname, cr.Command)
 		if cr.Stdout.Len() > 0 {
-			fmt.Printf("STDOUT:\n%s\n", cr.StdoutString())
+			fmt.Printf("STDOUT:\n%s\n", cr.StdoutString(false))
 		}
 		if cr.Stderr.Len() > 0 {
-			fmt.Printf("STDERR:\n%s\n", cr.StderrString())
+			fmt.Printf("STDERR:\n%s\n", cr.StderrString(false))
 		}
 		fmt.Println("END")
 	}
@@ -124,7 +134,7 @@ func executeCommand(cmd string, host Host, config *ssh.ClientConfig, sudo bool) 
 }
 
 func serviceList(op string, list []string, res chan<- CommandReturn, host Host, config *ssh.ClientConfig, sudo bool) {
-	
+
 	// sshd needs to restart first, completely, before other things fly
 	for _, p := range list {
 		if p == "sshd" {
@@ -132,7 +142,7 @@ func serviceList(op string, list []string, res chan<- CommandReturn, host Host, 
 			res <- executeCommand(serviceCommand, host, config, sudo)
 		}
 	}
-	
+
 	for _, p := range list {
 		if p == "sshd" {
 			// Skip sshd, as we've already restarted it above, if appropriate

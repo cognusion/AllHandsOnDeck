@@ -235,6 +235,10 @@ Every command in All is executed as a unique session to the remote host, so if y
 
 Timeouts in All may not work how you expect them to. They are not per-command, or per-session, or per-host, or per-workflow: They are per-All-operation. So if you specify a 5 second timeout, and are asking 1000 hosts to execute 16 commands in a workflow, they've all got 5 seconds before All bails, and who-knows-what ends up happening on-systems. For that reason, a "mintimeout" is available in each workflow, to automatically bump the timeout if it isn't already. This should generally be generously high.
 
+## Concurrency
+
+One thing to remember, especially with regards to the timeouts, is that All does launch commands and workflows in parallel*ish* against all of the relevant hosts. Delays connection to or getting returns from one or more hosts do not hold up others, although they will delay the operation.
+
 
 Forward, Ho
 ===========
