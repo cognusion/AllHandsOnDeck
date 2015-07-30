@@ -78,16 +78,6 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 			// %%anotherworkflowname
 			log.Printf("Chaining workflows currently unsupported!\n")
 			return wr
-
-			/*
-				flow := strings.TrimPrefix(c, "%%")
-				flowIndex := conf.WorkflowIndex(flow)
-				if flowIndex < 0 {
-					log.Printf("Chained workflow '%s' does not exist in specified configs!\n", flow)
-					return wr
-				}
-			*/
-
 		} else if strings.HasPrefix(c, "SET ") {
 			// SET %varname% "some string"
 			err := w.handleSet(c)
@@ -95,55 +85,16 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 				log.Printf("Error during SET: %s\n", err)
 				return wr
 			}
-
 		} else if strings.HasPrefix(c, "FOR ") {
 			// FOR list ACTION
-
-			cparts := strings.Split(c, " ")
-			if len(cparts) < 3 {
-				// Hmmm, malformated FOR
-				log.Printf("'FOR list ACTION' statement incomplete: '%s'\n", c)
-				return wr //?
+			crs, err := w.handleFor(c, host, config, sudo)
+			if len(crs) > 0 {
+				wr.CommandReturns = append(wr.CommandReturns, crs...)
 			}
-
-			var list []string
-
-			// Set up our list
-			if cparts[1] == "needs-restarting" {
-				// Do that voodoo that you do, for special command "needs-restarting"
-				listRes := executeCommand(cparts[1], host, config, sudo)
-				wr.CommandReturns = append(wr.CommandReturns, listRes)
-				if listRes.Error != nil {
-					// We have a valid error, and must break, as we'll have
-					//  an invalid list to operate on
-					log.Printf("needs-restarting on host %s failed: %s\n", host.Name, listRes.Error)
-					return wr
-				}
-				list = needsRestartingMangler(listRes.StdoutStrings(true), makeList([]string{globalVars["dontrestart-processes"]}))
-			} else {
-				// Treat the middle of cparts as actual list items
-				list = makeList(cparts[1 : len(cparts)-1])
+			if err != nil {
+				log.Printf("Error during FOR: %s\n", err)
+				return wr
 			}
-
-			// Handle our ACTIONs
-			action := strings.ToLower(cparts[len(cparts)-1])
-			if action == "restart" ||
-				action == "start" ||
-				action == "stop" ||
-				action == "status" {
-				// Service operation requested.
-
-				serviceResults := make(chan CommandReturn, 10)
-				serviceList(action, list, serviceResults, host, config, sudo)
-
-				for li := 0; li < len(list); li++ {
-					select {
-					case res := <-serviceResults:
-						wr.CommandReturns = append(wr.CommandReturns, res)
-					}
-				}
-			}
-
 		} else {
 			// Regular command
 			res := executeCommand(c, host, config, sudo)
@@ -159,6 +110,56 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 
 	wr.Completed = true
 	return wr
+}
+
+func (w *Workflow) handleFor(c string, host Host, config *ssh.ClientConfig, sudo bool) ([]CommandReturn, error) {
+
+	var crs []CommandReturn
+	cparts := strings.Split(c, " ")
+	if len(cparts) < 3 {
+		// Hmmm, malformated FOR
+		return crs, fmt.Errorf("'FOR list ACTION' statement incomplete: '%s'\n", c)
+	}
+	
+	var list []string
+	
+	// Set up our list
+	if cparts[1] == "needs-restarting" {
+		// Do that voodoo that you do, for special command "needs-restarting"
+		listRes := executeCommand(cparts[1], host, config, sudo)
+		crs = append(crs, listRes)
+		if listRes.Error != nil {
+			// We have a valid error, and must break, as we'll have
+			//  an invalid list to operate on
+			return crs, fmt.Errorf("needs-restarting on host %s failed: %s\n", host.Name, listRes.Error)
+		}
+		list = needsRestartingMangler(listRes.StdoutStrings(true), makeList([]string{globalVars["dontrestart-processes"]}))
+	} else {
+		// Treat the middle of cparts as actual list items
+		list = makeList(cparts[1 : len(cparts)-1])
+	}
+	
+	// Handle our ACTIONs
+	action := strings.ToLower(cparts[len(cparts)-1])
+	if action == "restart" ||
+		action == "start" ||
+		action == "stop" ||
+		action == "status" {
+		// Service operation requested.
+	
+		serviceResults := make(chan CommandReturn, 10)
+		serviceList(action, list, serviceResults, host, config, sudo)
+	
+		for li := 0; li < len(list); li++ {
+			select {
+			case res := <-serviceResults:
+				crs = append(crs, res)
+			}
+		}
+	}
+	
+	return crs, nil
+
 }
 
 func (w *Workflow) handleSet(c string) error {
