@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"golang.org/x/crypto/ssh"
 	"log"
 	"regexp"
@@ -89,63 +90,11 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 
 		} else if strings.HasPrefix(c, "SET ") {
 			// SET %varname% "some string"
-
-			cparts := strings.Split(c, " ")
-			if len(cparts) < 3 {
-				// Hmmm, malformated SET
-				log.Printf("'SET %varname% \"value\"' statement incomplete: '%s'\n", c)
-				return wr //?
+			err := w.handleSet(c)
+			if err != nil {
+				log.Printf("Error during SET: %s\n", err)
+				return wr
 			}
-
-			vname := strings.Trim(cparts[1], "%")              // nuke the lead/trail percents from the varname
-			vvalue := strings.Join(cparts[2:len(cparts)], " ") // concatenate any end parts
-			vvalue = strings.Trim(vvalue, "\"")                // nuke lead/trail dub-quotes
-			vvalue = strings.Trim(vvalue, "'")                 // nuke lead/trail sing-quotes
-
-			if strings.Contains(vvalue, "S3(") {
-				// We need a tokened S3 URL
-
-				// Confirm we actually have the bits set
-				if _, ok := globalVars["awsaccess_key"]; ok == false {
-					log.Printf("No AWS access key set, but S3() called\n")
-					return wr
-				} else if _, ok := globalVars["awsaccess_secretkey"]; ok == false {
-					log.Printf("No AWS secret key set, but S3() called\n")
-					return wr
-				}
-
-				re := regexp.MustCompile(`^(.*)S3\((.*)\)(.*)$`)
-				rparts := re.FindStringSubmatch(vvalue)
-				if rparts == nil {
-					log.Printf("Error processing S3(s): '%s'\n", vvalue)
-					return wr
-				}
-
-				bucket, filePath, _ := s3UrlToParts(rparts[2])
-				url := generateS3Url(bucket, filePath,
-					globalVars["awsaccess_key"], globalVars["awsaccess_secretkey"],
-					"", 60)
-
-				vvalue = rparts[1] + url + rparts[3]
-
-			} else if strings.Contains(vvalue, "RAND(") {
-				// We need a random string
-				re := regexp.MustCompile(`^(.*)RAND\(([0-9]+)\)(.*)$`)
-				rparts := re.FindStringSubmatch(vvalue)
-				if rparts == nil {
-					log.Printf("Error processing RAND(n): '%s'\n", vvalue)
-					return wr
-				}
-
-				n, err := strconv.Atoi(rparts[2])
-				if err != nil {
-					log.Printf("Problem using '%s' as a number\n", rparts[2])
-					return wr
-				}
-				vvalue = rparts[1] + randString(n) + rparts[3]
-			}
-
-			w.vars[vname] = vvalue
 
 		} else if strings.HasPrefix(c, "FOR ") {
 			// FOR list ACTION
@@ -170,7 +119,7 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 					log.Printf("needs-restarting on host %s failed: %s\n", host.Name, listRes.Error)
 					return wr
 				}
-				list = needsRestartingMangler(listRes.StdoutStrings(true),makeList([]string{globalVars["dontrestart-processes"]}))
+				list = needsRestartingMangler(listRes.StdoutStrings(true), makeList([]string{globalVars["dontrestart-processes"]}))
 			} else {
 				// Treat the middle of cparts as actual list items
 				list = makeList(cparts[1 : len(cparts)-1])
@@ -210,4 +159,72 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 
 	wr.Completed = true
 	return wr
+}
+
+func (w *Workflow) handleSet(c string) error {
+
+	var err error
+	cparts := strings.Split(c, " ")
+
+	if len(cparts) < 3 {
+		// Hmmm, malformated SET
+		return fmt.Errorf("'SET %varname% \"value\"' statement incomplete: '%s'\n", c)
+	}
+
+	vname := strings.Trim(cparts[1], "%")              // nuke the lead/trail percents from the varname
+	vvalue := strings.Join(cparts[2:len(cparts)], " ") // concatenate any end parts
+	vvalue = strings.Trim(vvalue, "\"")                // nuke lead/trail dub-quotes
+	vvalue = strings.Trim(vvalue, "'")                 // nuke lead/trail sing-quotes
+
+	if strings.Contains(vvalue, "S3(") {
+		// We need a tokened S3 URL
+		vvalue, err = w.handleS3(vvalue, globalVars["awsaccess_key"], globalVars["awsaccess_secretkey"])
+	} else if strings.Contains(vvalue, "RAND(") {
+		// We need a random string
+		vvalue, err = w.handleRand(vvalue)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	w.vars[vname] = vvalue
+	return nil
+}
+
+func (w *Workflow) handleS3(vvalue, accessKey, secretKey string) (string, error) {
+
+	// Confirm we actually have the bits set
+	if _, ok := globalVars["awsaccess_key"]; ok == false {
+		return "", fmt.Errorf("No AWS access key set, but S3() called\n")
+	} else if _, ok := globalVars["awsaccess_secretkey"]; ok == false {
+		return "", fmt.Errorf("No AWS secret key set, but S3() called\n")
+	}
+
+	re := regexp.MustCompile(`^(.*)S3\((.*)\)(.*)$`)
+	rparts := re.FindStringSubmatch(vvalue)
+	if rparts == nil {
+		return "", fmt.Errorf("Error processing S3(s): '%s'\n", vvalue)
+	}
+
+	s3u := s3UrlToParts(rparts[2])
+	url := generateS3Url(s3u.Bucket, s3u.Path,
+		accessKey, secretKey, "", 60)
+
+	return rparts[1] + url + rparts[3], nil
+}
+
+func (w *Workflow) handleRand(vvalue string) (string, error) {
+
+	re := regexp.MustCompile(`^(.*)RAND\(([0-9]+)\)(.*)$`)
+	rparts := re.FindStringSubmatch(vvalue)
+	if rparts == nil {
+		return "", fmt.Errorf("Error processing RAND(n): '%s'\n", vvalue)
+	}
+
+	n, err := strconv.Atoi(rparts[2])
+	if err != nil {
+		return "", fmt.Errorf("Problem using '%s' as a number\n", rparts[2])
+	}
+	return rparts[1] + randString(n) + rparts[3], nil
 }

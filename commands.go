@@ -140,6 +140,7 @@ func serviceList(op string, list []string, res chan<- CommandReturn, host Host, 
 		if p == "sshd" {
 			serviceCommand := "service " + p + " " + op + "; sleep 2"
 			res <- executeCommand(serviceCommand, host, config, sudo)
+			break
 		}
 	}
 

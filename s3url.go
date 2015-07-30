@@ -12,24 +12,46 @@ import (
 	"time"
 )
 
-func s3UrlToParts(url string) (string, string, string) {
+type S3Url struct {
+	Bucket string
+	Path   string
+	File   string
+	Params string
+}
 
+func (s *S3Url) ParamList() []string {
+	return strings.Split(s.Params,"&")
+}
+
+func s3UrlToParts(url string) *S3Url {
+	var sr *S3Url
 	if strings.HasPrefix(url, "http") {
 		// Long nasty URL, but we still need the parts
-		tparts := strings.Split(url, "?")
+		tparts := strings.SplitN(url, "?", 2)
 		parts := strings.Split(tparts[0], "/")
 		bucket := strings.TrimSuffix(parts[2], ".s3.amazonaws.com")
 		file := parts[len(parts)-1]
 		path := "/" + strings.Join(parts[3:len(parts)], "/")
-		return bucket, path, file
-
+		sr = &S3Url{
+			Bucket: bucket,
+			Path:   path,
+			File:   file,
+		}
+		if len(tparts) > 1 {
+			sr.Params = tparts[1]
+		}
 	} else {
 		// s3:// URL or who knows. Try.
 		url = strings.TrimPrefix(url, "s3://")
 		parts := strings.SplitN(url, "/", 2)
 		moar := strings.Split(url, "/")
-		return parts[0], "/" + parts[1], moar[len(moar)-1]
+		sr = &S3Url{
+			Bucket: parts[0],
+			Path:   "/" + parts[1],
+			File:   moar[len(moar)-1],
+		}
 	}
+	return sr
 }
 
 func generateS3Url(bucket string, filePath string, awsAccessKeyID string,
