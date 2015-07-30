@@ -85,14 +85,16 @@ func (c *Command) Exec() CommandReturn {
 		return cr
 	}
 	
+	cmd := c.Cmd
+	
 	if c.Sudo {
-		c.Cmd = "sudo " + c.Cmd
+		cmd = "sudo " + cmd
 	}
 
-	debugOut.Printf("Executing command '%s'\n", c.Cmd)
+	debugOut.Printf("Executing command '%s'\n", cmd)
 	
 	cr.HostObj = c.Host
-	cr.Command = c.Cmd
+	cr.Command = cmd
 	cr.Error = nil
 
 	var connectName string
@@ -138,7 +140,7 @@ func (c *Command) Exec() CommandReturn {
 	session.Stderr = &cr.Stderr
 
 	// Run the cmd
-	err = session.Run(c.Cmd)
+	err = session.Run(cmd)
 	if err != nil {
 		log.Printf("Execution of command failed on %s: %s", connectName, err)
 		cr.Error = err
@@ -147,10 +149,11 @@ func (c *Command) Exec() CommandReturn {
 
 }
 
-func serviceList(op string, list []string, res chan<- CommandReturn, com *Command) {
+func serviceList(op string, list []string, res chan<- CommandReturn, com Command) {
 
 	// sshd needs to restart first, completely, before other things fly
 	for _, p := range list {
+	
 		if p == "sshd" {
 			serviceCommand := "service " + p + " " + op + "; sleep 2"
 			com.Cmd = serviceCommand
@@ -166,7 +169,7 @@ func serviceList(op string, list []string, res chan<- CommandReturn, com *Comman
 		}
 		serviceCommand := "service " + p + " " + op + "; sleep 2"
 		com.Cmd = serviceCommand
-		go func(com *Command) {
+		go func(com Command) {
 			res <- com.Exec()
 		}(com)
 

@@ -229,9 +229,9 @@ func main() {
 		
 		if workflow {
 			// Workflow
-			go func(com *Command) {
+			go func(com Command) {
 				wfResults <- conf.Workflows[wfIndex].Exec(com)
-			}(com)
+			}(*com)
 
 			// Also, if there is a mintimeout, let's maybe use it
 			if conf.Workflows[wfIndex].MinTimeout > timeout {
@@ -240,9 +240,9 @@ func main() {
 		} else {
 			// Command
 			com.Cmd = cmd
-			go func(com *Command) {
+			go func(com Command) {
 				commandResults <- com.Exec()
-			}(com)
+			}(*com)
 		}
 	}
 

@@ -51,7 +51,7 @@ func (w *Workflow) varParse(s string) string {
 }
 
 // Exec executes a workflow against the supplied Host
-func (w *Workflow) Exec(com *Command) WorkflowReturn {
+func (w *Workflow) Exec(com Command) WorkflowReturn {
 
 	var wr WorkflowReturn
 	wr.Name = w.Name
@@ -112,7 +112,7 @@ func (w *Workflow) Exec(com *Command) WorkflowReturn {
 	return wr
 }
 
-func (w *Workflow) handleFor(c string, com *Command) ([]CommandReturn, error) {
+func (w *Workflow) handleFor(c string, com Command) ([]CommandReturn, error) {
 
 	var crs []CommandReturn
 
