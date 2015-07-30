@@ -6,9 +6,15 @@ All Hands On Deck (aka "all") is a simple agentless orchestration system written
 Basics
 ======
 
+All allows you to execute arbitrary "commands" on hosts. You can also group "commands" into "workflows", which can be pretty complicated. 
+
+"Filters" can be applied to "workflows" and/or specified on the command-line. CLI filters are applied first.
+
 ```bash
 go get github.com/cognusion/AllHandsOnDeck
 go build -o all
+go test
+
 ./all --help
 Usage of ./all:
   -cmd="": Command to run
