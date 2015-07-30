@@ -21,6 +21,13 @@ type CommandReturn struct {
 	Stderr   bytes.Buffer
 }
 
+type Command struct {
+	Cmd       string
+	Host      Host
+	SSHConfig *ssh.ClientConfig
+	Sudo      bool
+}
+
 // StdoutString return the Stdout buffer as a string
 func (cr *CommandReturn) StdoutString(nullToSpace bool) string {
 	if nullToSpace {
@@ -68,33 +75,40 @@ func (cr *CommandReturn) Process() {
 	}
 }
 
-func executeCommand(cmd string, host Host, config *ssh.ClientConfig, sudo bool) CommandReturn {
-
-	if sudo {
-		cmd = "sudo " + cmd
-	}
-
-	debugOut.Printf("Executing command '%s'\n", cmd)
+func (c *Command) Exec() CommandReturn {
 
 	var cr CommandReturn
-	cr.HostObj = host
-	cr.Command = cmd
+	
+	if c.Cmd == "" {
+		log.Printf("Command Exec request has no Cmd!")
+		cr.Error = fmt.Errorf("Command Exec request has no Cmd!")
+		return cr
+	}
+	
+	if c.Sudo {
+		c.Cmd = "sudo " + c.Cmd
+	}
+
+	debugOut.Printf("Executing command '%s'\n", c.Cmd)
+	
+	cr.HostObj = c.Host
+	cr.Command = c.Cmd
 	cr.Error = nil
 
 	var connectName string
-	if host.Address != "" {
-		connectName = host.Address
+	if c.Host.Address != "" {
+		connectName = c.Host.Address
 	} else {
-		connectName = host.Name
+		connectName = c.Host.Name
 	}
 	cr.Hostname = connectName
 
 	port := "22"
-	if host.Port != 0 {
-		port = strconv.Itoa(host.Port)
+	if c.Host.Port != 0 {
+		port = strconv.Itoa(c.Host.Port)
 	}
 
-	conn, err := ssh.Dial("tcp", connectName+":"+port, config)
+	conn, err := ssh.Dial("tcp", connectName+":"+port, c.SSHConfig)
 	if err != nil {
 		log.Printf("Connection to %s on port %s failed: %s\n", connectName, port, err)
 		cr.Error = err
@@ -104,7 +118,7 @@ func executeCommand(cmd string, host Host, config *ssh.ClientConfig, sudo bool) 
 	session, _ := conn.NewSession()
 	defer session.Close()
 
-	if sudo {
+	if c.Sudo {
 		// Set up terminal modes
 		modes := ssh.TerminalModes{
 			ssh.ECHO:          0,     // disable echoing
@@ -124,7 +138,7 @@ func executeCommand(cmd string, host Host, config *ssh.ClientConfig, sudo bool) 
 	session.Stderr = &cr.Stderr
 
 	// Run the cmd
-	err = session.Run(cmd)
+	err = session.Run(c.Cmd)
 	if err != nil {
 		log.Printf("Execution of command failed on %s: %s", connectName, err)
 		cr.Error = err
@@ -133,13 +147,14 @@ func executeCommand(cmd string, host Host, config *ssh.ClientConfig, sudo bool) 
 
 }
 
-func serviceList(op string, list []string, res chan<- CommandReturn, host Host, config *ssh.ClientConfig, sudo bool) {
+func serviceList(op string, list []string, res chan<- CommandReturn, com *Command) {
 
 	// sshd needs to restart first, completely, before other things fly
 	for _, p := range list {
 		if p == "sshd" {
 			serviceCommand := "service " + p + " " + op + "; sleep 2"
-			res <- executeCommand(serviceCommand, host, config, sudo)
+			com.Cmd = serviceCommand
+			res <- com.Exec()
 			break
 		}
 	}
@@ -150,10 +165,10 @@ func serviceList(op string, list []string, res chan<- CommandReturn, host Host, 
 			continue
 		}
 		serviceCommand := "service " + p + " " + op + "; sleep 2"
-
-		go func(host Host) {
-			res <- executeCommand(serviceCommand, host, config, sudo)
-		}(host)
+		com.Cmd = serviceCommand
+		go func(com *Command) {
+			res <- com.Exec()
+		}(com)
 
 	}
 }

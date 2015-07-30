@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	"golang.org/x/crypto/ssh"
 	"log"
 	"regexp"
 	"strconv"
@@ -52,18 +51,18 @@ func (w *Workflow) varParse(s string) string {
 }
 
 // Exec executes a workflow against the supplied Host
-func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) WorkflowReturn {
+func (w *Workflow) Exec(com *Command) WorkflowReturn {
 
 	var wr WorkflowReturn
 	wr.Name = w.Name
-	wr.HostObj = host
+	wr.HostObj = com.Host
 	wr.Completed = false
 
 	debugOut.Printf("Executing workflow %s\n", w.Name)
 
 	// Per-wf override for sudo
 	if w.Sudo == true {
-		sudo = true
+		com.Sudo = true
 	}
 
 	for i, c := range w.Commands {
@@ -87,7 +86,7 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 			}
 		} else if strings.HasPrefix(c, "FOR ") {
 			// FOR list ACTION
-			crs, err := w.handleFor(c, host, config, sudo)
+			crs, err := w.handleFor(c, com)
 			if len(crs) > 0 {
 				wr.CommandReturns = append(wr.CommandReturns, crs...)
 			}
@@ -97,7 +96,8 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 			}
 		} else {
 			// Regular command
-			res := executeCommand(c, host, config, sudo)
+			com.Cmd = c
+			res := com.Exec()
 			wr.CommandReturns = append(wr.CommandReturns, res)
 			if res.Error != nil && (len(w.CommandBreaks) == 0 || w.CommandBreaks[i] == true) {
 				// We have a valid error, and either we're not using CommandBreaks (assume breaks)
@@ -112,33 +112,35 @@ func (w *Workflow) Exec(host Host, config *ssh.ClientConfig, sudo bool) Workflow
 	return wr
 }
 
-func (w *Workflow) handleFor(c string, host Host, config *ssh.ClientConfig, sudo bool) ([]CommandReturn, error) {
+func (w *Workflow) handleFor(c string, com *Command) ([]CommandReturn, error) {
 
 	var crs []CommandReturn
+
 	cparts := strings.Split(c, " ")
 	if len(cparts) < 3 {
 		// Hmmm, malformated FOR
 		return crs, fmt.Errorf("'FOR list ACTION' statement incomplete: '%s'\n", c)
 	}
-	
+
 	var list []string
-	
+
 	// Set up our list
 	if cparts[1] == "needs-restarting" {
 		// Do that voodoo that you do, for special command "needs-restarting"
-		listRes := executeCommand(cparts[1], host, config, sudo)
+		com.Cmd = cparts[1]
+		listRes := com.Exec()
 		crs = append(crs, listRes)
 		if listRes.Error != nil {
 			// We have a valid error, and must break, as we'll have
 			//  an invalid list to operate on
-			return crs, fmt.Errorf("needs-restarting on host %s failed: %s\n", host.Name, listRes.Error)
+			return crs, fmt.Errorf("needs-restarting on host %s failed: %s\n", com.Host.Name, listRes.Error)
 		}
 		list = needsRestartingMangler(listRes.StdoutStrings(true), makeList([]string{globalVars["dontrestart-processes"]}))
 	} else {
 		// Treat the middle of cparts as actual list items
 		list = makeList(cparts[1 : len(cparts)-1])
 	}
-	
+
 	// Handle our ACTIONs
 	action := strings.ToLower(cparts[len(cparts)-1])
 	if action == "restart" ||
@@ -146,10 +148,10 @@ func (w *Workflow) handleFor(c string, host Host, config *ssh.ClientConfig, sudo
 		action == "stop" ||
 		action == "status" {
 		// Service operation requested.
-	
+
 		serviceResults := make(chan CommandReturn, 10)
-		serviceList(action, list, serviceResults, host, config, sudo)
-	
+		serviceList(action, list, serviceResults, com)
+
 		for li := 0; li < len(list); li++ {
 			select {
 			case res := <-serviceResults:
@@ -157,7 +159,7 @@ func (w *Workflow) handleFor(c string, host Host, config *ssh.ClientConfig, sudo
 			}
 		}
 	}
-	
+
 	return crs, nil
 
 }

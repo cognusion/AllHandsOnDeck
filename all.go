@@ -226,11 +226,14 @@ func main() {
 		 *   Workflows are configured sets of commands and logics, with sets of returns
 		 *   Commands are single directives, with single returns
 		 */
+		 
+		com := &Command{ Host: host, SSHConfig: config, Sudo: sudo}
+		
 		if workflow {
 			// Workflow
-			go func(host Host) {
-				wfResults <- conf.Workflows[wfIndex].Exec(host, config, sudo)
-			}(host)
+			go func(com *Command) {
+				wfResults <- conf.Workflows[wfIndex].Exec(com)
+			}(com)
 
 			// Also, if there is a mintimeout, let's maybe use it
 			if conf.Workflows[wfIndex].MinTimeout > timeout {
@@ -238,9 +241,10 @@ func main() {
 			}
 		} else {
 			// Command
-			go func(host Host) {
-				commandResults <- executeCommand(cmd, host, config, sudo)
-			}(host)
+			com.Cmd = cmd
+			go func(com *Command) {
+				commandResults <- com.Exec()
+			}(com)
 		}
 	}
 
