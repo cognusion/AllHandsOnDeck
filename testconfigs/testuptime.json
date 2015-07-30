@@ -1,0 +1,10 @@
+{
+	"workflows": [
+		{
+			"name": "uptime",
+			"commands": [
+				"uptime;hostname"
+			]
+		}
+	]	
+}

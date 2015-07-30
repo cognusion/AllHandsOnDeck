@@ -1,0 +1,20 @@
+{
+	"miscs": [
+		{
+			"name": "awsaccess_key",
+			"value": "lskdjfslkdjfslkdjfls"
+		},
+		{
+			"name": "awsaccess_secretkey",
+			"value": "dslkfjsdlkfjskdjfsljfls"
+		},
+		{
+			"name": "dontrestart-processes",
+			"value": "udevd,mongod,tomcat,java"
+		},
+		{
+			"name": "usesshagent",
+			"value": "true"
+		}
+	]	
+}

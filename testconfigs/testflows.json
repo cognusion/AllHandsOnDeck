@@ -1,0 +1,43 @@
+{
+	"workflows": [
+		{
+			"name": "restart-tomcat",
+			"filter": "Tags == tomcat",
+			"sudo": true,
+			"commands": [
+				"service tomcat stop",
+				"sleep 2",
+				"service tomcat start"
+			]
+		},
+		{
+			"name": "updateall-restart",
+			"filter": "Tags == azl and Tags != noupdate",
+			"mintimeout": 600,
+			"sudo": true,
+			"commands": [
+				"yum clean all",
+				"yum update -y",
+				"FOR needs-restarting RESTART"
+			]
+		},
+		{
+			"name": "updateall",
+			"sudo": true,
+			"filter": "Tags == azl and Tags != noupdate",
+			"mintimeout": 600,
+			"commands": [
+				"yum clean all",
+				"yum update -y"
+			]
+		},
+		{
+			"name": "do-needs-restarting",
+			"filter": "Tags == azl and Tags != noupdate",
+			"sudo": true,
+			"commands": [
+				"FOR needs-restarting RESTART"
+			]
+		}
+	]	
+}

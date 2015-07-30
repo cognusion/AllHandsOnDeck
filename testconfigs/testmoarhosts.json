@@ -1,0 +1,29 @@
+{
+	"hosts": [
+		{
+			"name": "prodhost6",
+			"address": "10.0.3.224",
+			"port": 22,
+			"tags": ["azl", "mongo-2.4","prod"]
+		},
+		{
+			"name": "prodhost7",
+			"address": "10.0.3.117",
+			"port": 22,
+			"tags": ["azl", "mongo-2.4","prod"]
+		},
+		{
+			"name": "prodhost8",
+			"address": "10.0.3.100",
+			"port": 22,
+			"user": "root",
+			"tags": [ "cent5","prod","noupdate" ]
+		},
+		{
+			"name": "prodhost9",
+			"address": "10.0.3.198",
+			"port": 22,
+			"tags": ["azl", "prod", "tomcat" ]	
+		}
+	]
+}

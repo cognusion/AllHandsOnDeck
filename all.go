@@ -63,7 +63,7 @@ func (c *Config) WorkflowIndex(workflow string) int {
 	return flowIndex
 }
 
-var debugOut *log.Logger
+var debugOut *log.Logger = log.New(ioutil.Discard, "", log.Lshortfile)
 
 var globalVars map[string]string
 
@@ -111,8 +111,6 @@ func main() {
 
 	if debug {
 		debugOut = log.New(os.Stdout, "[DEBUG]", log.Lshortfile)
-	} else {
-		debugOut = log.New(ioutil.Discard, "", log.Lshortfile)
 	}
 
 	// Handle the configs
