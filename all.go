@@ -176,6 +176,9 @@ func main() {
 		for _, host := range conf.Hosts {
 			if host.Offline == true {
 				continue
+			} else if filter != "" && host.If(filter) == false {
+				// Check to see if the this host matches our filter
+				continue
 			}
 			fmt.Printf("%s: %s\n", host.Name, host.Address)
 		}
@@ -186,7 +189,7 @@ func main() {
 		}
 		os.Exit(0)
 	}
-	
+
 	// We must have a command, no?
 	if cmd == "" {
 		log.Fatalln("--cmd must be set!")
@@ -204,7 +207,7 @@ func main() {
 
 	// We've made it through checks and tests.
 	// Let's do this.
-	
+
 	hostList := make(map[string]bool)
 	for _, host := range conf.Hosts {
 
