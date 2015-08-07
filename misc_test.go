@@ -25,6 +25,11 @@ var dTest []string = strings.Split(`26068 : /usr/bin/mongod -f /etc/mongod2.conf
 `, "\n")
 var rsyslogTest []string = []string{"1129 : /sbin/rsyslogd"}
 
+var nagiosTest []string = strings.Split(`2494 : /sbin/mingetty /dev/tty3 
+2496 : /sbin/mingetty /dev/tty4 
+12462 : /usr/sbin/nagios -d /etc/nagios/nagios.cfg 
+`,"\n")
+
 var sshTest []string = strings.Split(`2812 : sshd: ec2-user [priv]
 sshd: ec2-user@pts/0
 `, "\n")
@@ -109,6 +114,13 @@ func TestNeedsRestartingMangler_D(t *testing.T) {
 	v := needsRestartingMangler(dTest, emptyTest)
 	if stringArrayEquality(v, []string{"mongod", "udevd"}) == false {
 		t.Error("Expected [mongod udevd], got ", v)
+	}
+}
+
+func TestNeedsRestartingMangler_Nagios(t *testing.T) {
+	v := needsRestartingMangler(nagiosTest, emptyTest)
+	if stringArrayEquality(v, []string{"nagios"}) == false {
+		t.Error("Expected [nagios], got ", v)
 	}
 }
 

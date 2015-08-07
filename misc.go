@@ -105,6 +105,8 @@ func needsRestartingMangler(plist []string, drList []string) []string {
 				initMap["dirsrv"] = true
 			} else if cmd == "java" && strings.Contains(p, "catalina") {
 				initMap["tomcat"] = true
+			} else if cmd == "nagios" {
+				initMap["nagios"] = true
 			} else if strings.HasSuffix(cmd, "d") {
 				if cmd == "rsyslogd" {
 					// Stupid thing
