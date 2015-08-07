@@ -64,9 +64,9 @@ func (cr *CommandReturn) StderrStrings(nullToSpace bool) []string {
 func (cr *CommandReturn) Process() {
 	if strings.Contains(cr.Command, "needs-restarting") {
 		plist := needsRestartingMangler(cr.StdoutStrings(true), makeList([]string{globalVars["dontrestart-processes"]}))
-		fmt.Printf("%s: %s\n%v\n", cr.Hostname, cr.Command, plist)
+		fmt.Printf("%s (%s): %s\n%v\n", cr.HostObj.Name, cr.Hostname, cr.Command, plist)
 	} else {
-		fmt.Printf("%s: %s\n", cr.Hostname, cr.Command)
+		fmt.Printf("%s (%s): %s\n", cr.HostObj.Name, cr.Hostname, cr.Command)
 		if cr.Stdout.Len() > 0 {
 			fmt.Printf("STDOUT:\n%s\n", cr.StdoutString(false))
 		}
