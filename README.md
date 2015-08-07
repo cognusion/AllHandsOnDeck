@@ -23,9 +23,11 @@ Usage of ./all:
   -configtest=false: Load and parse configs, and exit
   -debug=false: Enable Debug output
   -filter="": Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)
+  -listhosts=false: List the hostnames and addresses and exit
+  -listworkflows=false: List the workflows and exit
   -quiet=false: Suppress most-if-not-all normal output
   -sshagent=false: Connect and use SSH-Agent vs. user key
-  -sshkey="/home/<current user>/.ssh/id_rsa": If not using the SSH-Agent, where to grab the key
+  -sshkey="~<current user>/.ssh/id_rsa": If not using the SSH-Agent, where to grab the key
   -sudo=false: Whether to run commands via sudo
   -timeout=60: Seconds before the entire operation times out
   -user="<current user>": User to run as

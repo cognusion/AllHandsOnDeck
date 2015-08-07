@@ -82,6 +82,8 @@ func main() {
 		configTest   bool
 		quiet        bool
 		configDump   bool
+		listHosts    bool
+		listFlows    bool
 		debug        bool
 
 		conf    Config
@@ -107,6 +109,8 @@ func main() {
 	flag.BoolVar(&configDump, "configdump", false, "Load and parse configs, dump them to output and exit")
 	flag.StringVar(&cmd, "cmd", "", "Command to run")
 	flag.StringVar(&filter, "filter", "", "Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)")
+	flag.BoolVar(&listHosts, "listhosts", false, "List the hostnames and addresses and exit")
+	flag.BoolVar(&listFlows, "listworkflows", false, "List the workflows and exit")
 	flag.Parse()
 
 	if debug {
@@ -122,21 +126,6 @@ func main() {
 
 		// Build any needed global vars
 		globalVars = miscToMap(conf.Miscs)
-	}
-
-	// We must have a command, no?
-	if cmd == "" {
-		log.Fatalln("--cmd must be set!")
-	}
-
-	// If cmd is a workflow
-	//  - ensure the workflow exists
-	//  - cache the location of the specified workflow
-	if workflow {
-		wfIndex = conf.WorkflowIndex(cmd)
-		if wfIndex < 0 {
-			log.Fatalf("Workflow '%s' does not exist in specified configs!\n", cmd)
-		}
 	}
 
 	/*
@@ -183,8 +172,39 @@ func main() {
 		// Just kicking the tires...
 		fmt.Println("Config loaded and bootstrapped successfully...")
 		os.Exit(0)
+	} else if listHosts {
+		for _, host := range conf.Hosts {
+			if host.Offline == true {
+				continue
+			}
+			fmt.Printf("%s: %s\n", host.Name, host.Address)
+		}
+		os.Exit(0)
+	} else if listFlows {
+		for _, flow := range conf.Workflows {
+			fmt.Printf("%s\n", flow.Name)
+		}
+		os.Exit(0)
+	}
+	
+	// We must have a command, no?
+	if cmd == "" {
+		log.Fatalln("--cmd must be set!")
 	}
 
+	// If cmd is a workflow
+	//  - ensure the workflow exists
+	//  - cache the location of the specified workflow
+	if workflow {
+		wfIndex = conf.WorkflowIndex(cmd)
+		if wfIndex < 0 {
+			log.Fatalf("Workflow '%s' does not exist in specified configs!\n", cmd)
+		}
+	}
+
+	// We've made it through checks and tests.
+	// Let's do this.
+	
 	hostList := make(map[string]bool)
 	for _, host := range conf.Hosts {
 
@@ -224,9 +244,9 @@ func main() {
 		 *   Workflows are configured sets of commands and logics, with sets of returns
 		 *   Commands are single directives, with single returns
 		 */
-		 
-		com := &Command{ Host: host, SSHConfig: config, Sudo: sudo}
-		
+
+		com := &Command{Host: host, SSHConfig: config, Sudo: sudo}
+
 		if workflow {
 			// Workflow
 			go func(com Command) {
@@ -253,7 +273,7 @@ func main() {
 			select {
 			case res := <-wfResults:
 				hostList[res.HostObj.Name] = true // returned is good enough for this
-				
+
 				if res.Completed == false {
 					log.Printf("Workflow %s did not fully complete\n", res.Name)
 				}
@@ -279,7 +299,7 @@ func main() {
 			select {
 			case res := <-commandResults:
 				hostList[res.HostObj.Name] = true // returned is good enough for this
-			
+
 				if quiet == false {
 					res.Process()
 				}

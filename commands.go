@@ -9,6 +9,8 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	//"os"
+	//"io"
 )
 
 // CommandReturn is a structure returned after executing a command
@@ -78,21 +80,21 @@ func (cr *CommandReturn) Process() {
 func (c *Command) Exec() CommandReturn {
 
 	var cr CommandReturn
-	
+
 	if c.Cmd == "" {
 		log.Printf("Command Exec request has no Cmd!")
 		cr.Error = fmt.Errorf("Command Exec request has no Cmd!")
 		return cr
 	}
-	
+
 	cmd := c.Cmd
-	
+
 	if c.Sudo {
 		cmd = "sudo " + cmd
 	}
 
 	debugOut.Printf("Executing command '%s'\n", cmd)
-	
+
 	cr.HostObj = c.Host
 	cr.Command = cmd
 	cr.Error = nil
@@ -153,7 +155,7 @@ func serviceList(op string, list []string, res chan<- CommandReturn, com Command
 
 	// sshd needs to restart first, completely, before other things fly
 	for _, p := range list {
-	
+
 		if p == "sshd" {
 			serviceCommand := "service " + p + " " + op + "; sleep 2"
 			com.Cmd = serviceCommand
@@ -175,3 +177,45 @@ func serviceList(op string, list []string, res chan<- CommandReturn, com Command
 
 	}
 }
+
+/*
+func scp(sPath, dPath string, com Command) error {
+	
+	session, err := com.SSHConfig.connect()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	src, srcErr := os.Open(sPath)
+	if srcErr != nil {
+		return srcErr
+	}
+
+	srcStat, statErr := src.Stat()
+	if statErr != nil {
+		return statErr
+	}
+
+	go func() {
+		w, _ := session.StdinPipe()
+
+		fmt.Fprintln(w, "C0644", srcStat.Size(), dPath)
+
+		if srcStat.Size() > 0 {
+			io.Copy(w, src)
+			fmt.Fprint(w, "\x00")
+			w.Close()
+		} else {
+			fmt.Fprint(w, "\x00")
+			w.Close()
+		}
+	}()
+
+	if err := session.Run(fmt.Sprintf("scp -t %s", dPath)); err != nil {
+		return err
+	}
+
+	return nil
+}
+*/
