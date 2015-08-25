@@ -13,6 +13,7 @@ type Host struct {
 	Address string
 	Arch    string
 	Loc     string
+	Wave    int
 	Name    string
 	Offline bool
 	Port    int
@@ -79,29 +80,35 @@ func (h *Host) If(cond string) bool {
 
 		// Case/swtich to check each of the fields
 		found := false
-		if parts[0] == "Tags" {
+		switch parts[0] {
+		case "Tags":
 			found = h.SearchTags(parts[2])
-		} else if parts[0] == "Port" {
+		case "Port":
 			fport, _ := strconv.Atoi(parts[2])
 			if h.Port != 0 {
 				found = h.Port == fport
 			} else {
-				// we started allow port to be skipped
+				// we started allowing port to be skipped
 				found = 22 == fport
 			}
-		} else if parts[0] == "Address" {
+		case "Wave":
+			fwave, _ := strconv.Atoi(parts[2])
+			if h.Wave != 0 {
+				found = h.Wave == fwave
+			}
+		case "Address":
 			found = h.Address == parts[2]
-		} else if parts[0] == "Loc" {
+		case "Loc":
 			found = h.Loc == parts[2]
-		} else if parts[0] == "Name" {
+		case "Name":
 			found = h.Name == parts[2]
-		} else if parts[0] == "Arch" {
+		case "Arch":
 			found = h.Arch == parts[2]
-		} else if parts[0] == "User" {
+		case "User":
 			// caveat: We don't have access to the CLI-specified user,
 			// so this only matches a host-specified user
 			found = h.User == parts[2]
-		} else {
+		default:
 			// Hmmm...
 			debugOut.Printf("Conditional name '%s' does not exist!\n", parts[0])
 			return false

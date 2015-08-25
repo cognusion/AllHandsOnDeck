@@ -10,6 +10,7 @@ var host1 *Host = &Host{
 	Arch:    "x86_64",
 	Loc:     "east",
 	Name:    "testhost1",
+	Wave:    1,
 	Offline: false,
 	Port:    22,
 	Tags:    []string{"tag3", "tag2", "tag1", "tag4"},
@@ -17,8 +18,14 @@ var host1 *Host = &Host{
 }
 
 // Tags == dev and Tags == httpd or Tags == haproxy or Tags == tomcat and Tags == daisy
-var host2 *Host = &Host {
-	Tags: []string{"dev","httpd","tomcat","daisy"},
+var host2 *Host = &Host{
+	Tags: []string{"dev", "httpd", "tomcat", "daisy"},
+}
+
+func TestHost_Wave(t *testing.T) {
+	if host1.If("Wave != 1") {
+		t.Error("Wave not evaluated properly")
+	}
 }
 
 func TestHost_TagSort(t *testing.T) {
@@ -93,7 +100,7 @@ func TestHost2_ComplexFilter(t *testing.T) {
 	f := "Tags == dev and Tags == httpd or Tags == haproxy or Tags == tomcat and Tags == daisy"
 	fn := "Tags == dev and Tags == httpd or Tags == haproxy or Tags == tomcat and Tags == dipsy"
 	fo := "Tags == dev and Tags == NOPE or Tags == NOT or Tags == HRM and Tags == daisy"
-	
+
 	if host2.If(f) == false {
 		t.Errorf("Expecting true for '%s' from %s\n", f, host2.Tags)
 	}

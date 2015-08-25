@@ -7,19 +7,38 @@ popular, I hear). Commands are executed in parallelish, as are workflows (comman
 within a workflow are executed serially)
 
 Usage of ./all:
-  -cmd="": Command to run
-  -configdump=false: Load and parse configs, dump them to output and exit
-  -configs="configs/": Path to the folder where the config files are (*.json)
-  -configtest=false: Load and parse configs, and exit
-  -debug=false: Enable Debug output
-  -filter="": Boolean expression to positively filter on host elements (Tags, Name, Address, Arch[itecture], Loc[ation], User, Port, etc.)
-  -quiet=false: Suppress most-if-not-all normal output
-  -sshagent=false: Connect and use SSH-Agent vs. user key
-  -sshkey="/Users/<current user>/.ssh/id_rsa": If not using the SSH-Agent, where to grab the key
-  -sudo=false: Whether to run commands via sudo
-  -timeout=60: Seconds before the entire operation times out
-  -user="<current user>": User to run as
-  -workflow=false: The --cmd is a workflow
+  -cmd string
+    	Command to run
+  -configdump
+    	Load and parse configs, dump them to output and exit
+  -configs string
+    	Path to the folder where the config files are (*.json) (default "configs/")
+  -configtest
+    	Load and parse configs, and exit
+  -debug
+    	Enable Debug output
+  -filter string
+    	Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)
+  -listhosts
+    	List the hostnames and addresses and exit
+  -listworkflows
+    	List the workflows and exit
+  -quiet
+    	Suppress most-if-not-all normal output
+  -sshagent
+    	Connect and use SSH-Agent vs. user key
+  -sshkey string
+    	If not using the SSH-Agent, where to grab the key (default "/Users/M/.ssh/id_rsa")
+  -sudo
+    	Whether to run commands via sudo
+  -timeout int
+    	Seconds before the entire operation times out (default 60)
+  -user string
+    	User to run as (default "M")
+  -wave int
+    	Specify which "wave" this should be applied to
+  -workflow
+    	The --cmd is a workflow
 */
 package main
 
@@ -85,6 +104,7 @@ func main() {
 		listHosts    bool
 		listFlows    bool
 		debug        bool
+		wave         int
 
 		conf    Config
 		auths   []ssh.AuthMethod
@@ -111,6 +131,7 @@ func main() {
 	flag.StringVar(&filter, "filter", "", "Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)")
 	flag.BoolVar(&listHosts, "listhosts", false, "List the hostnames and addresses and exit")
 	flag.BoolVar(&listFlows, "listworkflows", false, "List the workflows and exit")
+	flag.IntVar(&wave, "wave", 0, "Specify which \"wave\" this should be applied to")
 	flag.Parse()
 
 	if debug {
@@ -179,6 +200,9 @@ func main() {
 			} else if filter != "" && host.If(filter) == false {
 				// Check to see if the this host matches our filter
 				continue
+			} else if wave != 0 && host.Wave != wave {
+				// Check to see if we're using waves, and if this is in it
+				continue
 			}
 			fmt.Printf("%s: %s\n", host.Name, host.Address)
 		}
@@ -213,6 +237,11 @@ func main() {
 
 		// Check to see if the host is offline
 		if host.Offline == true {
+			continue
+		}
+
+		// Check to see if we're using waves, and if this is in it
+		if wave != 0 && host.Wave != wave {
 			continue
 		}
 

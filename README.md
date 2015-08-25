@@ -17,21 +17,38 @@ go test
 
 ./all --help
 Usage of ./all:
-  -cmd="": Command to run
-  -configdump=false: Load and parse configs, dump them to output and exit
-  -configs="configs/": Path to the folder where the config files are (*.json)
-  -configtest=false: Load and parse configs, and exit
-  -debug=false: Enable Debug output
-  -filter="": Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)
-  -listhosts=false: List the hostnames and addresses and exit
-  -listworkflows=false: List the workflows and exit
-  -quiet=false: Suppress most-if-not-all normal output
-  -sshagent=false: Connect and use SSH-Agent vs. user key
-  -sshkey="~<current user>/.ssh/id_rsa": If not using the SSH-Agent, where to grab the key
-  -sudo=false: Whether to run commands via sudo
-  -timeout=60: Seconds before the entire operation times out
-  -user="<current user>": User to run as
-  -workflow=false: The --cmd is a workflow
+  -cmd string
+    	Command to run
+  -configdump
+    	Load and parse configs, dump them to output and exit
+  -configs string
+    	Path to the folder where the config files are (*.json) (default "configs/")
+  -configtest
+    	Load and parse configs, and exit
+  -debug
+    	Enable Debug output
+  -filter string
+    	Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)
+  -listhosts
+    	List the hostnames and addresses and exit
+  -listworkflows
+    	List the workflows and exit
+  -quiet
+    	Suppress most-if-not-all normal output
+  -sshagent
+    	Connect and use SSH-Agent vs. user key
+  -sshkey string
+    	If not using the SSH-Agent, where to grab the key (default "/Users/M/.ssh/id_rsa")
+  -sudo
+    	Whether to run commands via sudo
+  -timeout int
+    	Seconds before the entire operation times out (default 60)
+  -user string
+    	User to run as (default "M")
+  -wave int
+    	Specify which "wave" this should be applied to
+  -workflow
+    	The --cmd is a workflow
 ```
 
 At it's simplest, All will execute the specified command on all your hosts, via your SSH key.
@@ -70,6 +87,7 @@ Configs can specify hosts which can have:
 * Address - IP address of the host (optional, if Name is a valid hostname)
 * Arch - Architecture of the host (e.g. 'x86_64') (optional)
 * Loc - Location of the system (e.g. 'Denver', or 'Rack 12', or whatever) (optional)
+* Wave - If you want to run commands in waves, you can specify an affinity number >0. May be filtered using --wave CLI param, and/or standard filters (optional)
 * Name - Name of the host. If it's a valid DNS hostname, Address may be omitted
 * Offline - True if the host is offline and should be skipped, else omitted or false
 * Port - Which port SSH is running on. Defaults to 22.
