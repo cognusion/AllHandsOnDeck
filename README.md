@@ -192,6 +192,13 @@ Finally, if the name of the host is not ugly, the filter succeeds and this host 
 Workflow Special Commands
 =========================
 
+QUIET
+-----
+
+    QUIET command
+
+Sometimes a command's output is inconsequential. Leading it with _QUIET_ will suppress output of that one command when the workflow is post-processing. 
+
 
 FOR
 ---
@@ -202,7 +209,7 @@ One of the things I conveniently ignored in the workflow example above was a par
 
 This is a work in progress, but what that command does, on some systems, is runs the yum-provided "needs-restarting" command, sanitizes and mangles the results into a list of Well-Known Packages, and then runs "service ... restart" on them (in parallelish).
 
-**I strongly recommend you don't use it.** I do all the time, but I also intimately know the state of my systems, and the ramifications therein.
+**I strongly recommend you don't use it.** I do all the time, but I also intimately know the state of my systems, and the ramifications therein. You've been warned.
 
 ACTION is currently one of: START, STOP, RESTART, STATUS, and "list" is either the keyword "needs-restarting", as described above, or a space-separated list of inits to act on, e.g.
 

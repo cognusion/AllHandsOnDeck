@@ -73,6 +73,16 @@ func (w *Workflow) Exec(com Command) WorkflowReturn {
 		}
 
 		// Handle workflow special commands
+		if strings.HasPrefix(c, "QUIET ") {
+			// Set quiet, and mangle the command
+			c = strings.TrimPrefix(c, "QUIET ")
+			debugOut.Printf("Command quieted: '%s'\n", c)
+			com.Quiet = true
+		} else {
+			// Make sure we're not quiet
+			com.Quiet = false
+		}
+
 		if strings.HasPrefix(c, "%%") {
 			// %%anotherworkflowname
 			log.Printf("Chaining workflows currently unsupported!\n")

@@ -21,6 +21,7 @@ type CommandReturn struct {
 	Command  string
 	Stdout   bytes.Buffer
 	Stderr   bytes.Buffer
+	Quiet    bool
 }
 
 type Command struct {
@@ -28,6 +29,7 @@ type Command struct {
 	Host      Host
 	SSHConfig *ssh.ClientConfig
 	Sudo      bool
+	Quiet     bool
 }
 
 // StdoutString return the Stdout buffer as a string
@@ -62,6 +64,10 @@ func (cr *CommandReturn) StderrStrings(nullToSpace bool) []string {
 
 // Process inspected the CommandReturn and outputs structured information about it
 func (cr *CommandReturn) Process() {
+	if cr.Quiet {
+		return
+	}
+
 	if strings.Contains(cr.Command, "needs-restarting") {
 		plist := needsRestartingMangler(cr.StdoutStrings(true), makeList([]string{globalVars["dontrestart-processes"]}))
 		fmt.Printf("%s (%s): %s\n%v\n", cr.HostObj.Name, cr.Hostname, cr.Command, plist)
@@ -97,6 +103,7 @@ func (c *Command) Exec() CommandReturn {
 
 	cr.HostObj = c.Host
 	cr.Command = cmd
+	cr.Quiet = c.Quiet
 	cr.Error = nil
 
 	var connectName string
@@ -180,7 +187,7 @@ func serviceList(op string, list []string, res chan<- CommandReturn, com Command
 
 /*
 func scp(sPath, dPath string, com Command) error {
-	
+
 	session, err := com.SSHConfig.connect()
 	if err != nil {
 		return err
