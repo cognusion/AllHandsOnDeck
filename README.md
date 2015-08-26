@@ -1,8 +1,6 @@
 # AllHandsOnDeck
 All Hands On Deck (aka "all") is a simple agentless orchestration system written in Go, for Linux. You can run it *from* any platform that supports Go (Macs are popular, I hear). Commands are executed in parallelish, as are workflows (commands within a workflow are executed serially);
 
-**This documentation is pretty awful. The in-code documentation is even worse.**
-
 Basics
 ======
 
@@ -34,7 +32,7 @@ Usage of ./all:
   -listworkflows
     	List the workflows and exit
   -max int
-    	Specify the maximum number of concurent commands to execute. (default 15)
+    	Specify the maximum number of concurent commands to execute. Set to 0 to make a good guess for you (default 0)
   -quiet
     	Suppress most-if-not-all normal output
   -sshagent
@@ -172,7 +170,7 @@ It is worth noting that each command in a workflow is executed in order, seriall
 Misc
 ----
 
-Some things are clunky on the CLI, or shouldn't be passed that way, or we're simply lazy and want to make sure that whenever we run anything, that thing is set the way we want. That's what a _Misc_ is for. 
+Some things are clunky on the CLI, or shouldn't be passed that way, or we're simply lazy and want to make sure that whenever we run anything, that thing is set the way we want. That's what a _Misc_ is for. Miscs override CLI params if set.
 
 ```json
 {
@@ -231,7 +229,7 @@ If you always want to use an SSH agent, it's obnoxious to specify it on the CLI 
 
 ### maxexecs
 
-The system default for maximum execution is currently 15, and if you always want that to be something different, it's obnoxious to specify it on the CLI all the time. Set this instead:
+The system default for maximum execution is currently 0 (educated guess), and if you always want that to be something different, it's obnoxious to specify it on the CLI all the time. Set this instead:
 ```json
 	{
 		"name": "maxexecs",
@@ -343,7 +341,9 @@ Timeouts in All may not work how you expect them to. They are not per-command, o
 
 One thing to remember, especially with regards to the timeouts, is that All does launch commands and workflows in parallel*ish* against all of the relevant hosts. Delays connecting to or getting returns from one or more hosts do not hold up others, although they will delay the operation.
 
-There is a gating mechanism that keeps the number of simultaneous operations to a sane limit, in order to prevent exhausting socket/open file resources on the running host (I'm looking at you, MacOS). _-max_ or the misc _maxexecs_ controls how many can be executing at a time. This number should be kept under 10% of the open file limit for your user, and defaults to 15.
+### Maxexecs
+
+There is a gating mechanism that keeps the number of simultaneous operations to a sane limit in order to prevent exhausting socket/open file resources on the running host (I'm looking at you, MacOS). _-max_ on the CLI or the misc _maxexecs_ controls how many can be executing at a time (by way of a semaphore). By default this is set to 0, which causes All to make a pretty decent guess by taking the OS limit for open files, subtracting how many files are currently open by the process, and dividing all that by the number of commands in the requested workflow (or not, if a workflow is not being used). **If this is resulting in "out of file" errors please submit an issue report!** Of course, you can downlimit this to save yourself some cycles.
 
 
 Forward, Ho

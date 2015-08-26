@@ -5,42 +5,6 @@ All Hands On Deck (aka "all") is a simple agentless orchestration system written
 in Go, for Linux. You can run it *from* any platform that supports Go (Macs are
 popular, I hear). Commands are executed in parallelish, as are workflows (commands
 within a workflow are executed serially)
-
-Usage of ./all:
-  -cmd string
-    	Command to run
-  -configdump
-    	Load and parse configs, dump them to output and exit
-  -configs string
-    	Path to the folder where the config files are (*.json) (default "configs/")
-  -configtest
-    	Load and parse configs, and exit
-  -debug
-    	Enable Debug output
-  -filter string
-    	Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)
-  -listhosts
-    	List the hostnames and addresses and exit
-  -listworkflows
-    	List the workflows and exit
-  -max int
-    	Specify the maximum number of concurent commands to execute. (default 15)
-  -quiet
-    	Suppress most-if-not-all normal output
-  -sshagent
-    	Connect and use SSH-Agent vs. user key
-  -sshkey string
-    	If not using the SSH-Agent, where to grab the key (default "/Users/M/.ssh/id_rsa")
-  -sudo
-    	Whether to run commands via sudo
-  -timeout int
-    	Seconds before the entire operation times out (default 60)
-  -user string
-    	User to run as (default "M")
-  -wave int
-    	Specify which "wave" this should be applied to
-  -workflow
-    	The --cmd is a workflow
 */
 package main
 
@@ -136,7 +100,7 @@ func main() {
 	flag.BoolVar(&listHosts, "listhosts", false, "List the hostnames and addresses and exit")
 	flag.BoolVar(&listFlows, "listworkflows", false, "List the workflows and exit")
 	flag.IntVar(&wave, "wave", 0, "Specify which \"wave\" this should be applied to")
-	flag.IntVar(&max, "max", 15, "Specify the maximum number of concurent commands to execute.")
+	flag.IntVar(&max, "max", 0, "Specify the maximum number of concurent commands to execute. Set to 0 to make a good guess for you")
 	flag.Parse()
 
 	if debug {
@@ -240,10 +204,22 @@ func main() {
 		if wfIndex < 0 {
 			log.Fatalf("Workflow '%s' does not exist in specified configs!\n", cmd)
 		}
+
+		if max == 0 {
+			// Autoconfig max execs
+			max = saneMaxLimitFromWorkflow(conf.Workflows[wfIndex])
+		}
+	} else {
+		// cmd is not a workflow
+		if max == 0 {
+			// Autoconfig max execs
+			max = saneMaxLimit()
+		}
 	}
 
 	// To keep things sane, we gate the number of goros that can be executing remote
 	// commands to a limit.
+	debugOut.Printf("Max simultaneous execs set to %d\n", max)
 	sem := NewSemaphore(max)
 
 	// We've made it through checks and tests.

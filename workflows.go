@@ -241,3 +241,10 @@ func (w *Workflow) handleRand(vvalue string) (string, error) {
 	}
 	return rparts[1] + randString(n) + rparts[3], nil
 }
+
+func saneMaxLimitFromWorkflow(wf Workflow) int {
+	avail := saneMaxLimit()
+	comCount := len(wf.Commands)
+
+	return avail / comCount
+}

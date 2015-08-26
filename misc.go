@@ -5,10 +5,14 @@ package main
 import (
 	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 // Misc is a simple key/value structure
@@ -150,4 +154,24 @@ func randString(size int) string {
 		bytes[k] = chars[v%byte(len(chars))]
 	}
 	return string(bytes)
+}
+
+func getOpenFiles() []string {
+	out, err := exec.Command("/bin/bash", "-c", fmt.Sprintf("lsof -np %v", os.Getpid())).Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	lines := strings.Split(string(out), "\n")
+	return lines
+}
+
+func saneMaxLimit() int {
+	var rLimit syscall.Rlimit
+	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
+	if err != nil {
+		log.Fatal("Error Getting Rlimit: %v\n", err)
+	}
+
+	of := len(getOpenFiles()) - 1
+	return int(rLimit.Cur) - of
 }
