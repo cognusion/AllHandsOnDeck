@@ -23,6 +23,8 @@ Usage of ./all:
     	List the hostnames and addresses and exit
   -listworkflows
     	List the workflows and exit
+  -max int
+    	Specify the maximum number of concurent commands to execute. (default 15)
   -quiet
     	Suppress most-if-not-all normal output
   -sshagent
@@ -52,6 +54,7 @@ import (
 	"net"
 	"os"
 	"os/user"
+	"strconv"
 	"time"
 )
 
@@ -105,6 +108,7 @@ func main() {
 		listFlows    bool
 		debug        bool
 		wave         int
+		max          int
 
 		conf    Config
 		auths   []ssh.AuthMethod
@@ -132,6 +136,7 @@ func main() {
 	flag.BoolVar(&listHosts, "listhosts", false, "List the hostnames and addresses and exit")
 	flag.BoolVar(&listFlows, "listworkflows", false, "List the workflows and exit")
 	flag.IntVar(&wave, "wave", 0, "Specify which \"wave\" this should be applied to")
+	flag.IntVar(&max, "max", 15, "Specify the maximum number of concurent commands to execute.")
 	flag.Parse()
 
 	if debug {
@@ -155,6 +160,14 @@ func main() {
 	 */
 	if _, ok := globalVars["usesshagent"]; ok && globalVars["usesshagent"] == "true" {
 		sshAgent = true
+	}
+
+	if _, ok := globalVars["maxexecs"]; ok {
+		m, err := strconv.Atoi(globalVars["maxexecs"])
+		if err != nil {
+			log.Fatalf("maxexecs set to '%s', and cannot convert to number: %s\n", globalVars["maxexecs"], err.Error())
+		}
+		max = m
 	}
 
 	/*
@@ -229,9 +242,12 @@ func main() {
 		}
 	}
 
+	// To keep things sane, we gate the number of goros that can be executing remote
+	// commands to a limit.
+	sem := NewSemaphore(max)
+
 	// We've made it through checks and tests.
 	// Let's do this.
-
 	hostList := make(map[string]bool)
 	for _, host := range conf.Hosts {
 
@@ -282,6 +298,9 @@ func main() {
 		if workflow {
 			// Workflow
 			go func(com Command) {
+				sem.Lock()
+				defer sem.Unlock()
+
 				wfResults <- conf.Workflows[wfIndex].Exec(com)
 			}(*com)
 
@@ -293,6 +312,9 @@ func main() {
 			// Command
 			com.Cmd = cmd
 			go func(com Command) {
+				sem.Lock()
+				defer sem.Unlock()
+
 				commandResults <- com.Exec()
 			}(*com)
 		}

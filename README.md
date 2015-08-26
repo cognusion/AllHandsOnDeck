@@ -33,6 +33,8 @@ Usage of ./all:
     	List the hostnames and addresses and exit
   -listworkflows
     	List the workflows and exit
+  -max int
+    	Specify the maximum number of concurent commands to execute. (default 15)
   -quiet
     	Suppress most-if-not-all normal output
   -sshagent
@@ -170,7 +172,72 @@ It is worth noting that each command in a workflow is executed in order, seriall
 Misc
 ----
 
-TODO talk about miscs and stuff
+Some things are clunky on the CLI, or shouldn't be passed that way, or we're simply lazy and want to make sure that whenever we run anything, that thing is set the way we want. That's what a _Misc_ is for. 
+
+```json
+{
+	"miscs": [
+		{
+			"name": "awsaccess_key",
+			"value": "ABCDEFG"
+		},
+		{
+			"name": "awsaccess_secretkey",
+			"value": "123456789"
+		},
+		{
+			"name": "dontrestart-processes",
+			"value": "udevd,mongod,tomcat,java,dirsrv,ns-slapd"
+		},
+		{
+			"name": "usesshagent",
+			"value": "true"
+		},
+		{
+			"name": "maxexecs",
+			"value": "30"
+		}
+	]
+}
+```
+
+### awsaccess_key
+
+Along with _awsaccess_secretkey_ below, these are used for Amazon Web Services operations that need credentials. Currently just creating S3 time-token URLs when using the _S3()_ workflow special command.
+
+### awsaccess_secretkey
+
+Along with _awsaccess_key_ above, these are used for Amazon Web Services operations that need credentials. Currently just creating S3 time-token URLs when using the _S3()_ workflow special command.
+
+### dontrestart-processes
+
+If you use the _FOR list ACTION_ workflow special command, this slightly misnamed config allows you to specify a comma-delimited list of processes you don't want to _ACTION_ under any circumstances.
+```json
+    {
+		"name": "dontrestart-processes",
+		"value": "udevd,mongod,tomcat,java,dirsrv,ns-slapd"
+	}
+```
+
+### usesshagent
+
+If you always want to use an SSH agent, it's obnoxious to specify it on the CLI all the time. Set this instead:
+```json
+	{
+		"name": "usesshagent",
+		"value": "true"
+	}
+```
+
+### maxexecs
+
+The system default for maximum execution is currently 15, and if you always want that to be something different, it's obnoxious to specify it on the CLI all the time. Set this instead:
+```json
+	{
+		"name": "maxexecs",
+		"value": "30"
+	}
+```
 
 Filters
 =======
@@ -270,11 +337,13 @@ Every command in All is executed as a unique session to the remote host, so if y
 
 ## Timeouts
 
-Timeouts in All may not work how you expect them to. They are not per-command, or per-session, or per-host, or per-workflow: They are per-All-operation. So if you specify a 5 second timeout, and are asking 1000 hosts to execute 16 commands in a workflow, they've all got 5 seconds before All bails, and who-knows-what ends up happening on-systems. For that reason, a "mintimeout" is available in each workflow, to automatically bump the timeout if it isn't already. This should generally be generously high.
+Timeouts in All may not work how you expect them to. They are not per-command, or per-session, or per-host, or per-workflow: They are per-All-operation. So if you specify a 5 second timeout, and are asking 1000 hosts to execute 16 commands in a workflow, with a _-max_ of 15, they've all got 5 seconds before All bails, and who-knows-what ends up happening on-systems. For that reason, a "mintimeout" is available in each workflow, to automatically bump the timeout if it isn't already. This should generally be generously high.
 
 ## Concurrency
 
-One thing to remember, especially with regards to the timeouts, is that All does launch commands and workflows in parallel*ish* against all of the relevant hosts. Delays connection to or getting returns from one or more hosts do not hold up others, although they will delay the operation.
+One thing to remember, especially with regards to the timeouts, is that All does launch commands and workflows in parallel*ish* against all of the relevant hosts. Delays connecting to or getting returns from one or more hosts do not hold up others, although they will delay the operation.
+
+There is a gating mechanism that keeps the number of simultaneous operations to a sane limit, in order to prevent exhausting socket/open file resources on the running host (I'm looking at you, MacOS). _-max_ or the misc _maxexecs_ controls how many can be executing at a time. This number should be kept under 10% of the open file limit for your user, and defaults to 15.
 
 
 Forward, Ho
