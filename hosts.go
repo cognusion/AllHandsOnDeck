@@ -62,8 +62,28 @@ func (h *Host) If(cond string) bool {
 			}
 		}
 		return true
+	} else if strings.Contains(cond, " && ") {
+		ands := strings.Split(cond, " && ")
+		for _, a := range ands {
+			//debugOut.Printf("\tAND: %s\n",a)
+			ret := h.If(a)
+			if ret == false {
+				return false
+			}
+		}
+		return true
 	} else if strings.Contains(cond, " or ") {
 		ors := strings.Split(cond, " or ")
+		for _, o := range ors {
+			//debugOut.Printf("\tOR: %s\n",o)
+			ret := h.If(o)
+			if ret == true {
+				return true
+			}
+		}
+		return false
+	} else if strings.Contains(cond, " || ") {
+		ors := strings.Split(cond, " || ")
 		for _, o := range ors {
 			//debugOut.Printf("\tOR: %s\n",o)
 			ret := h.If(o)
