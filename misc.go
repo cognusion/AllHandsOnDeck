@@ -165,7 +165,7 @@ func getOpenFiles() []string {
 	return lines
 }
 
-func saneMaxLimit() int {
+func saneMaxLimit(sessionCount int) int {
 	var rLimit syscall.Rlimit
 	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
 	if err != nil {
@@ -173,5 +173,11 @@ func saneMaxLimit() int {
 	}
 
 	of := len(getOpenFiles()) - 1
-	return int(rLimit.Cur) - of
+	avail := int(rLimit.Cur) - of
+
+	if sessionCount < 1 {
+		// Sanity
+		sessionCount = 1
+	}
+	return avail / (sessionCount * 2)
 }

@@ -213,7 +213,7 @@ func main() {
 		// cmd is not a workflow
 		if max == 0 {
 			// Autoconfig max execs
-			max = saneMaxLimit()
+			max = saneMaxLimit(1)
 		}
 	}
 
