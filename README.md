@@ -343,7 +343,7 @@ One thing to remember, especially with regards to the timeouts, is that All does
 
 ### Maxexecs
 
-There is a gating mechanism that keeps the number of simultaneous operations to a sane limit in order to prevent exhausting socket/open file resources on the running host (I'm looking at you, MacOS). _-max_ on the CLI or the misc _maxexecs_ controls how many can be executing at a time (by way of a semaphore). By default this is set to 0, which causes All to make a pretty decent guess by taking the OS limit for open files, subtracting how many files are currently open by the process, and dividing all that by the number of commands in the requested workflow (or not, if a workflow is not being used). **If this is resulting in "out of file" errors please submit an issue report!** Of course, you can downlimit this to save yourself some cycles.
+There is a gating mechanism that keeps the number of simultaneous operations to a sane limit in order to prevent exhausting socket/open file resources on the running host (I'm looking at you, MacOS). _-max_ on the CLI or the misc _maxexecs_ controls how many can be executing at a time (by way of a semaphore). By default this is set to 0, which causes All to make a pretty decent guess by taking the OS limit for open files, subtracting how many files are currently open by the process, and dividing all that by twice the number of commands in the requested workflow. **If this is resulting in "out of file" errors please submit an issue report!** Of course, you can downlimit this to save yourself some cycles.
 
 
 Forward, Ho
