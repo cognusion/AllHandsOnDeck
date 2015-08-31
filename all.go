@@ -11,6 +11,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/cognusion/semaphore"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"io/ioutil"
@@ -220,7 +221,7 @@ func main() {
 	// To keep things sane, we gate the number of goros that can be executing remote
 	// commands to a limit.
 	debugOut.Printf("Max simultaneous execs set to %d\n", max)
-	sem := NewSemaphore(max)
+	sem := semaphore.NewSemaphore(max)
 
 	// We've made it through checks and tests.
 	// Let's do this.

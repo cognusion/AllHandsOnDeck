@@ -9,9 +9,11 @@ All allows you to execute arbitrary "commands" on hosts. You can also group "com
 "Filters" can be applied to "workflows" and/or specified on the command-line. CLI filters are applied first.
 
 ```bash
-go get github.com/cognusion/AllHandsOnDeck
-go build -o all
+go get github.com/cognusion/semaphore
+git clone http://github.com/cognusion/AllHandsOnDeck
+cd AllHandsOnDeck
 go test
+go build -o all
 
 ./all --help
 Usage of ./all:
