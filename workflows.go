@@ -54,13 +54,17 @@ func (w *Workflow) Init() {
 	w.vars = make(map[string]string)
 
 	// Prime the SET pump
-	for _, c := range w.Commands {
+	for i, c := range w.Commands {
 		if strings.HasPrefix(c, "SET ") {
 			// SET %varname% "some string"
 			err := w.handleSet(c)
 			if err != nil {
 				log.Printf("Error during SET: %s\n", err)
 			}
+		} else {
+			// Expand the vars, so we don't have to do it
+			// later, a billion times
+			w.Commands[i] = w.varParse(c)
 		}
 	}
 
@@ -87,10 +91,6 @@ func (w *Workflow) Exec(com Command) WorkflowReturn {
 			// SET %varname% "some string"
 			// Handled by Init()
 			continue
-
-		} else {
-			// Check the command for variables
-			c = w.varParse(c)
 		}
 
 		// Handle workflow special commands
