@@ -294,6 +294,15 @@ SET
 Variables, macros, what-have-you are what makes programming worth doing. All is worth doing
 too, so it needs those. In any workflow, you can put a SET command in lieu of a "real" command, to create a variable bound to the workflow, to be used later in any non-SET command.
 
+SET commands are evaluated _once_, before any executions take place. So, for example, if your command list looks like:
+
+```bash
+SET %TMPDIR% /tmp/specialRAND(16)
+mkdir %TMPDIR%
+```
+
+Every host will have the same folder created.
+
 ### RAND
 
     RAND(n)
