@@ -26,7 +26,6 @@ type Workflow struct {
 	MinTimeout    int
 	Commands      []string
 	CommandBreaks []bool
-	varLock       sync.Mutex
 	vars          map[string]string
 }
 
