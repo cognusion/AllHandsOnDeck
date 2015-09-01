@@ -26,6 +26,7 @@ type Workflow struct {
 	MinTimeout    int
 	Commands      []string
 	CommandBreaks []bool
+	varLock       sync.Mutex
 	vars          map[string]string
 }
 
@@ -50,6 +51,22 @@ func (w *Workflow) varParse(s string) string {
 	return s
 }
 
+func (w *Workflow) Init() {
+	w.vars = make(map[string]string)
+
+	// Prime the SET pump
+	for _, c := range w.Commands {
+		if strings.HasPrefix(c, "SET ") {
+			// SET %varname% "some string"
+			err := w.handleSet(c)
+			if err != nil {
+				log.Printf("Error during SET: %s\n", err)
+			}
+		}
+	}
+
+}
+
 // Exec executes a workflow against the supplied Host
 func (w *Workflow) Exec(com Command) WorkflowReturn {
 
@@ -67,8 +84,13 @@ func (w *Workflow) Exec(com Command) WorkflowReturn {
 
 	for i, c := range w.Commands {
 
-		// Check the command for variables
-		if strings.HasPrefix(c, "SET ") == false {
+		if strings.HasPrefix(c, "SET ") {
+			// SET %varname% "some string"
+			// Handled by Init()
+			continue
+
+		} else {
+			// Check the command for variables
 			c = w.varParse(c)
 		}
 
@@ -87,13 +109,7 @@ func (w *Workflow) Exec(com Command) WorkflowReturn {
 			// %%anotherworkflowname
 			log.Printf("Chaining workflows currently unsupported!\n")
 			return wr
-		} else if strings.HasPrefix(c, "SET ") {
-			// SET %varname% "some string"
-			err := w.handleSet(c)
-			if err != nil {
-				log.Printf("Error during SET: %s\n", err)
-				return wr
-			}
+
 		} else if strings.HasPrefix(c, "FOR ") {
 			// FOR list ACTION
 			crs, err := w.handleFor(c, com)
@@ -184,7 +200,13 @@ func (w *Workflow) handleSet(c string) error {
 		return fmt.Errorf("'SET %varname% \"value\"' statement incomplete: '%s'\n", c)
 	}
 
-	vname := strings.Trim(cparts[1], "%")              // nuke the lead/trail percents from the varname
+	vname := strings.Trim(cparts[1], "%") // nuke the lead/trail percents from the varname
+
+	if _, ok := w.vars[vname]; ok {
+		// already set, bail
+		return nil
+	}
+
 	vvalue := strings.Join(cparts[2:len(cparts)], " ") // concatenate any end parts
 	vvalue = strings.Trim(vvalue, "\"")                // nuke lead/trail dub-quotes
 	vvalue = strings.Trim(vvalue, "'")                 // nuke lead/trail sing-quotes

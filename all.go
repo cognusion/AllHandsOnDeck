@@ -200,6 +200,7 @@ func main() {
 	// If cmd is a workflow
 	//  - ensure the workflow exists
 	//  - cache the location of the specified workflow
+	//  - Do The Right Thing
 	if workflow {
 		wfIndex = conf.WorkflowIndex(cmd)
 		if wfIndex < 0 {
@@ -210,6 +211,10 @@ func main() {
 			// Autoconfig max execs
 			max = saneMaxLimitFromWorkflow(conf.Workflows[wfIndex])
 		}
+
+		// Init the workflow
+		conf.Workflows[wfIndex].Init()
+
 	} else {
 		// cmd is not a workflow
 		if max == 0 {
@@ -270,16 +275,16 @@ func main() {
 		 *   Commands are single directives, with single returns
 		 */
 
-		com := &Command{Host: host, SSHConfig: config, Sudo: sudo}
+		com := Command{Host: host, SSHConfig: config, Sudo: sudo}
 
 		if workflow {
 			// Workflow
-			go func(com Command) {
+			go func() {
 				sem.Lock()
 				defer sem.Unlock()
 
 				wfResults <- conf.Workflows[wfIndex].Exec(com)
-			}(*com)
+			}()
 
 			// Also, if there is a mintimeout, let's maybe use it
 			if conf.Workflows[wfIndex].MinTimeout > timeout {
@@ -288,12 +293,12 @@ func main() {
 		} else {
 			// Command
 			com.Cmd = cmd
-			go func(com Command) {
+			go func() {
 				sem.Lock()
 				defer sem.Unlock()
 
 				commandResults <- com.Exec()
-			}(*com)
+			}()
 		}
 	}
 
