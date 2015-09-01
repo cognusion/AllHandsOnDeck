@@ -29,6 +29,8 @@ Usage of ./all:
     	Enable Debug output
   -filter string
     	Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)
+  -format string
+    	Output format. One of: text, json, xml (default "text")
   -listhosts
     	List the hostnames and addresses and exit
   -listworkflows
@@ -219,6 +221,26 @@ If you use the _FOR list ACTION_ workflow special command, this slightly misname
 	}
 ```
 
+### maxexecs
+
+The system default for maximum execution is 0 (educated guess), and if you always want that to be something different, it's obnoxious to specify it on the CLI all the time. Set this instead:
+```json
+	{
+		"name": "maxexecs",
+		"value": "30"
+	}
+```
+
+### outputformat
+
+The default _-format_ is "text", and if you always want that to be something different, it's obnoxious to specify it on the CLI all the time. Set this instead:
+```json
+	{
+		"name": "outputformat",
+		"value": "json"
+	}
+```
+
 ### usesshagent
 
 If you always want to use an SSH agent, it's obnoxious to specify it on the CLI all the time. Set this instead:
@@ -226,16 +248,6 @@ If you always want to use an SSH agent, it's obnoxious to specify it on the CLI 
 	{
 		"name": "usesshagent",
 		"value": "true"
-	}
-```
-
-### maxexecs
-
-The system default for maximum execution is currently 0 (educated guess), and if you always want that to be something different, it's obnoxious to specify it on the CLI all the time. Set this instead:
-```json
-	{
-		"name": "maxexecs",
-		"value": "30"
 	}
 ```
 
@@ -363,10 +375,8 @@ Forward, Ho
 All was written for specific purposes 2013-2014, and is being ground-up rewritten to take advantage of new Go tech, lessons learned from 2 years of using it, and lessons learned from writing lots of Go - better Go - since then. As such, All as it is here isn't complete yet. Additionally, there are some things I want to add that would have been very difficult in with the old code base. The TODO list, In no particular order:
 
 1. scp-able helper files (quazi-agents) (almost unnecessary with new workflow)
-2. Configurable output (JSON, XML, whatevs)
 3. allsh, the All shell
 4. Moar "Workflow Special Commands"
-5. Command output analysis
 6. Option to fail Workflow command on stderr content
 7. Better visibility into what is happening, including a "dryrun" facility
 

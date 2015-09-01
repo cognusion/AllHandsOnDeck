@@ -4,13 +4,13 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"log"
 	"strconv"
 	"strings"
-	//"os"
-	//"io"
 )
 
 // CommandReturn is a structure returned after executing a command
@@ -30,6 +30,15 @@ type Command struct {
 	SSHConfig *ssh.ClientConfig
 	Sudo      bool
 	Quiet     bool
+}
+
+type commandOut struct {
+	Name    string
+	Address string
+	Command string
+	Stdout  []string
+	Stderr  []string
+	Error   string
 }
 
 // StdoutString return the Stdout buffer as a string
@@ -54,33 +63,100 @@ func (cr *CommandReturn) StderrString(nullToSpace bool) string {
 
 // StdoutStrings return the Stdout buffer as a string array
 func (cr *CommandReturn) StdoutStrings(nullToSpace bool) []string {
-	return strings.Split(cr.StdoutString(nullToSpace), "\n")
+	s := strings.Split(cr.StdoutString(nullToSpace), "\n")
+	return s[:len(s)-1]
 }
 
 // StderrStrings return the Stderr buffer as a string array
 func (cr *CommandReturn) StderrStrings(nullToSpace bool) []string {
-	return strings.Split(cr.StderrString(nullToSpace), "\n")
+	s := strings.Split(cr.StderrString(nullToSpace), "\n")
+	return s[:len(s)-1]
 }
 
-// Process inspected the CommandReturn and outputs structured information about it
-func (cr *CommandReturn) Process() {
-	if cr.Quiet {
-		return
+// Process inspected the CommandReturn pre-format the output
+func (cr *CommandReturn) format() commandOut {
+
+	f := commandOut{
+		Name:    cr.HostObj.Name,
+		Address: cr.HostObj.Address,
+		Command: cr.Command,
+	}
+
+	if cr.Error != nil {
+		f.Error = cr.Error.Error()
 	}
 
 	if strings.Contains(cr.Command, "needs-restarting") {
 		plist := needsRestartingMangler(cr.StdoutStrings(true), makeList([]string{globalVars["dontrestart-processes"]}))
-		fmt.Printf("%s (%s): %s\n%v\n", cr.HostObj.Name, cr.Hostname, cr.Command, plist)
+		f.Stdout = []string{"Restart list:"}
+		f.Stdout = append(f.Stdout, plist...)
 	} else {
-		fmt.Printf("%s (%s): %s\n", cr.HostObj.Name, cr.Hostname, cr.Command)
 		if cr.Stdout.Len() > 0 {
-			fmt.Printf("STDOUT:\n%s\n", cr.StdoutString(false))
+			f.Stdout = cr.StdoutStrings(false)
 		}
 		if cr.Stderr.Len() > 0 {
-			fmt.Printf("STDERR:\n%s\n", cr.StderrString(false))
+			f.Stderr = cr.StderrStrings(false)
 		}
-		fmt.Println("END")
 	}
+
+	return f
+}
+
+// Process inspected the CommandReturn and outputs XML
+func (cr *CommandReturn) ToXML() []byte {
+	if cr.Quiet {
+		return nil
+	}
+
+	f := cr.format()
+
+	j, err := xml.Marshal(f)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+
+	return j
+}
+
+// Process inspected the CommandReturn and outputs JSON
+func (cr *CommandReturn) ToJSON() []byte {
+	if cr.Quiet {
+		return nil
+	}
+
+	f := cr.format()
+
+	j, err := json.MarshalIndent(f, "\t", "\t")
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+
+	return j
+}
+
+// Process inspected the CommandReturn and outputs structured text
+func (cr *CommandReturn) ToText() {
+	if cr.Quiet {
+		return
+	}
+
+	f := cr.format()
+
+	fmt.Printf("%s (%s): %s\n", f.Name, f.Address, f.Command)
+	if len(f.Stdout) > 0 {
+		fmt.Println("STDOUT:")
+		for _, l := range f.Stdout {
+			fmt.Println(l)
+		}
+	}
+	if len(f.Stderr) > 0 {
+		fmt.Println("STDERR:")
+		for _, l := range f.Stderr {
+			fmt.Println(l)
+		}
+	}
+	fmt.Println("END\n")
+
 }
 
 func (c *Command) Exec() CommandReturn {

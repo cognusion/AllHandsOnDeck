@@ -74,6 +74,7 @@ func main() {
 		debug        bool
 		wave         int
 		max          int
+		format       string
 
 		conf    Config
 		auths   []ssh.AuthMethod
@@ -102,6 +103,7 @@ func main() {
 	flag.BoolVar(&listFlows, "listworkflows", false, "List the workflows and exit")
 	flag.IntVar(&wave, "wave", 0, "Specify which \"wave\" this should be applied to")
 	flag.IntVar(&max, "max", 0, "Specify the maximum number of concurent commands to execute. Set to 0 to make a good guess for you")
+	flag.StringVar(&format, "format", "text", "Output format. One of: text, json, xml")
 	flag.Parse()
 
 	if debug {
@@ -133,6 +135,10 @@ func main() {
 			log.Fatalf("maxexecs set to '%s', and cannot convert to number: %s\n", globalVars["maxexecs"], err.Error())
 		}
 		max = m
+	}
+
+	if f, ok := globalVars["outputformat"]; ok {
+		format = f
 	}
 
 	/*
@@ -192,9 +198,16 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Syntax checks here
+	
 	// We must have a command, no?
 	if cmd == "" {
 		log.Fatalln("--cmd must be set!")
+	}
+	
+	// Constrain format
+	if format != "text" && format != "json" && format != "xml" {
+		log.Fatalln("format must be one of \"text\", \"json\", or \"xml\"")
 	}
 
 	// If cmd is a workflow
@@ -302,6 +315,10 @@ func main() {
 		}
 	}
 
+	if format == "json" {
+		fmt.Println("{")
+	}
+
 	// We wait for all the goros to finish up
 	for i := 0; i < len(hostList); i++ {
 		if workflow {
@@ -316,9 +333,22 @@ func main() {
 
 				if quiet == false {
 					// Process all of the enclosed CommandReturns
+
 					for _, c := range res.CommandReturns {
-						c.Process()
+						switch format {
+						case "text":
+							c.ToText()
+						case "xml":
+							fmt.Println(string(c.ToXML()))
+						case "json":
+							b := c.ToJSON()
+							if i < len(hostList)-1 {
+								b = append(b, []byte(",")...)
+							}
+							fmt.Println("\t" + string(b))
+						}
 					}
+
 				}
 			case <-time.After(time.Duration(timeout) * time.Second):
 				var badHosts []string
@@ -337,7 +367,18 @@ func main() {
 				hostList[res.HostObj.Name] = true // returned is good enough for this
 
 				if quiet == false {
-					res.Process()
+					switch format {
+					case "text":
+						res.ToText()
+					case "xml":
+						fmt.Println(string(res.ToXML()))
+					case "json":
+						b := res.ToJSON()
+						if i < len(hostList)-1 {
+							b = append(b, []byte(",")...)
+						}
+						fmt.Println("\t" + string(b))
+					}
 				}
 			case <-time.After(time.Duration(timeout) * time.Second):
 				var badHosts []string
@@ -350,5 +391,9 @@ func main() {
 				return
 			}
 		}
+	}
+
+	if format == "json" {
+		fmt.Println("}")
 	}
 }
