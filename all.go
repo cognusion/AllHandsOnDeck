@@ -142,33 +142,9 @@ func main() {
 	}
 
 	/*
-	 * We are not allowing multiple keys, or key-per-hosts. If you need to possibly use
-	 * multiple keys, ensure ssh-agent is running and has them added, and execute with
-	 * --sshagent
+	 * All the breaking options here
+	 *
 	 */
-	if sshAgent {
-		// use SSH-Agent
-		conn, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK"))
-		if err != nil {
-			log.Fatalf("Error connecting to the ssh-agent. It may not be running, or SSH_AUTH_SOCK may be set in this environment: %s\n", err)
-		}
-		defer conn.Close()
-		ag := agent.NewClient(conn)
-		auths = []ssh.AuthMethod{ssh.PublicKeysCallback(ag.Signers)}
-	} else {
-		// Use a single key
-
-		buf, err := ioutil.ReadFile(sshKey)
-		if err != nil {
-			log.Fatalf("Error reading specified key '%s': %s\n", sshKey, err)
-		}
-		key, err := ssh.ParsePrivateKey(buf)
-		if err != nil {
-			log.Fatalf("Error parsing specified key '%s': %s\n", sshKey, err)
-		}
-		auths = []ssh.AuthMethod{ssh.PublicKeys(key)}
-	}
-
 	if configDump {
 		// Dump the config
 		fmt.Println(dumpConfigs(conf))
@@ -198,16 +174,47 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Syntax checks here
-	
+	/*
+	 * Syntax checks here
+	 *
+	 */
+
 	// We must have a command, no?
 	if cmd == "" {
 		log.Fatalln("--cmd must be set!")
 	}
-	
+
 	// Constrain format
 	if format != "text" && format != "json" && format != "xml" {
 		log.Fatalln("format must be one of \"text\", \"json\", or \"xml\"")
+	}
+
+	/*
+	 * We are not allowing multiple keys, or key-per-hosts. If you need to possibly use
+	 * multiple keys, ensure ssh-agent is running and has them added, and execute with
+	 * --sshagent
+	 */
+	if sshAgent {
+		// use SSH-Agent
+		conn, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK"))
+		if err != nil {
+			log.Fatalf("Error connecting to the ssh-agent. It may not be running, or SSH_AUTH_SOCK may be set in this environment: %s\n", err)
+		}
+		defer conn.Close()
+		ag := agent.NewClient(conn)
+		auths = []ssh.AuthMethod{ssh.PublicKeysCallback(ag.Signers)}
+	} else {
+		// Use a single key
+
+		buf, err := ioutil.ReadFile(sshKey)
+		if err != nil {
+			log.Fatalf("Error reading specified key '%s': %s\n", sshKey, err)
+		}
+		key, err := ssh.ParsePrivateKey(buf)
+		if err != nil {
+			log.Fatalf("Error parsing specified key '%s': %s\n", sshKey, err)
+		}
+		auths = []ssh.AuthMethod{ssh.PublicKeys(key)}
 	}
 
 	// If cmd is a workflow
