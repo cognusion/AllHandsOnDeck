@@ -342,6 +342,9 @@ func main() {
 					// Process all of the enclosed CommandReturns
 
 					for _, c := range res.CommandReturns {
+						if c.Quiet {
+							continue
+						}
 						switch format {
 						case "text":
 							c.ToText()
@@ -373,7 +376,7 @@ func main() {
 			case res := <-commandResults:
 				hostList[res.HostObj.Name] = true // returned is good enough for this
 
-				if quiet == false {
+				if quiet == false && res.Quiet == false {
 					switch format {
 					case "text":
 						res.ToText()
