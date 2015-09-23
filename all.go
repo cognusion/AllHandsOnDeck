@@ -341,7 +341,7 @@ func main() {
 				if quiet == false {
 					// Process all of the enclosed CommandReturns
 
-					for _, c := range res.CommandReturns {
+					for ci, c := range res.CommandReturns {
 						if c.Quiet {
 							continue
 						}
@@ -352,9 +352,10 @@ func main() {
 							fmt.Println(string(c.ToXML()))
 						case "json":
 							b := c.ToJSON()
-							if i < len(hostList)-1 {
+							if i < len(hostList)-1 || (ci < len(res.CommandReturns)-1 && res.CommandReturns[ci+1].Quiet == false) {
 								b = append(b, []byte(",")...)
 							}
+
 							fmt.Println("\t" + string(b))
 						}
 					}
