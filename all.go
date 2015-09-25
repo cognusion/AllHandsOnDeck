@@ -19,6 +19,7 @@ import (
 	"net"
 	"os"
 	"os/user"
+	"runtime"
 	"strconv"
 	"time"
 )
@@ -230,6 +231,9 @@ func main() {
 		if max == 0 {
 			// Autoconfig max execs
 			max = saneMaxLimitFromWorkflow(conf.Workflows[wfIndex])
+		} else if max == -1 {
+			// Autoconfig based on GOMAXPROCS (lame)
+			max = runtime.GOMAXPROCS(0)
 		}
 
 		// Init the workflow
@@ -240,6 +244,9 @@ func main() {
 		if max == 0 {
 			// Autoconfig max execs
 			max = saneMaxLimit(1)
+		} else if max == -1 {
+			// Autoconfig based on GOMAXPROCS (lame)
+			max = runtime.GOMAXPROCS(0)
 		}
 	}
 
