@@ -11,6 +11,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/cheggaaa/pb"
 	"github.com/cognusion/semaphore"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
@@ -104,7 +105,7 @@ func main() {
 	flag.BoolVar(&listFlows, "listworkflows", false, "List the workflows and exit")
 	flag.IntVar(&wave, "wave", 0, "Specify which \"wave\" this should be applied to")
 	flag.IntVar(&max, "max", 0, "Specify the maximum number of concurent commands to execute. Set to 0 to make a good guess for you")
-	flag.StringVar(&format, "format", "text", "Output format. One of: text, json, xml")
+	flag.StringVar(&format, "format", "text", "Output format. One of: text, json, xml, or bar")
 	flag.Parse()
 
 	if debug {
@@ -186,8 +187,8 @@ func main() {
 	}
 
 	// Constrain format
-	if format != "text" && format != "json" && format != "xml" {
-		log.Fatalln("format must be one of \"text\", \"json\", or \"xml\"")
+	if format != "text" && format != "json" && format != "xml" && format != "bar" {
+		log.Fatalln(`format must be one of "text", "json", "xml", or "bar"`)
 	}
 
 	/*
@@ -255,6 +256,15 @@ func main() {
 	debugOut.Printf("Max simultaneous execs set to %d\n", max)
 	sem := semaphore.NewSemaphore(max)
 
+	// Status bar! Hosts * 2 because we have the exec phase,
+	// and then the collection phase
+	bar := pb.New(len(conf.Hosts) * 2)
+
+	if format == "bar" {
+		debugOut.Printf("BAR: Set to %d\n", len(conf.Hosts)*2)
+		bar.Start()
+	}
+
 	// We've made it through checks and tests.
 	// Let's do this.
 	hostList := make(map[string]bool)
@@ -262,21 +272,25 @@ func main() {
 
 		// Check to see if the host is offline
 		if host.Offline == true {
+			bar.Increment()
 			continue
 		}
 
 		// Check to see if we're using waves, and if this is in it
 		if wave != 0 && host.Wave != wave {
+			bar.Increment()
 			continue
 		}
 
 		// Check to see if the this host matches our filter
 		if filter != "" && host.If(filter) == false {
+			bar.Increment()
 			continue
 		}
 
 		// Additionally, if there is a filter on the workflow, check the host against that too.
 		if workflow && conf.Workflows[wfIndex].Filter != "" && host.If(conf.Workflows[wfIndex].Filter) == false {
+			bar.Increment()
 			continue
 		}
 
@@ -307,10 +321,12 @@ func main() {
 		if workflow {
 			// Workflow
 			go func() {
+				defer bar.Increment()
 				sem.Lock()
 				defer sem.Unlock()
 
 				wfResults <- conf.Workflows[wfIndex].Exec(com)
+
 			}()
 
 			// Also, if there is a mintimeout, let's maybe use it
@@ -321,6 +337,7 @@ func main() {
 			// Command
 			com.Cmd = cmd
 			go func() {
+				defer bar.Increment()
 				sem.Lock()
 				defer sem.Unlock()
 
@@ -331,6 +348,10 @@ func main() {
 
 	if format == "json" {
 		fmt.Println("{")
+	} else if format == "bar" {
+		// catchup
+		debugOut.Printf("BAR: Catching up on %d\n", len(conf.Hosts)-len(hostList))
+		bar.Add(len(conf.Hosts) - len(hostList))
 	}
 
 	// We wait for all the goros to finish up
@@ -340,6 +361,7 @@ func main() {
 			select {
 			case res := <-wfResults:
 				hostList[res.HostObj.Name] = true // returned is good enough for this
+				bar.Increment()
 
 				if res.Completed == false {
 					log.Printf("Workflow %s did not fully complete\n", res.Name)
@@ -362,7 +384,6 @@ func main() {
 							if i < len(hostList)-1 || (ci < len(res.CommandReturns)-1 && res.CommandReturns[ci+1].Quiet == false) {
 								b = append(b, []byte(",")...)
 							}
-
 							fmt.Println("\t" + string(b))
 						}
 					}
@@ -373,6 +394,7 @@ func main() {
 				for h, v := range hostList {
 					if v == false {
 						badHosts = append(badHosts, h)
+						bar.Increment()
 					}
 				}
 				log.Printf("Workflow operation timed out! The following hosts haven't returned: %s\n", badHosts)
@@ -383,6 +405,7 @@ func main() {
 			select {
 			case res := <-commandResults:
 				hostList[res.HostObj.Name] = true // returned is good enough for this
+				bar.Increment()
 
 				if quiet == false && res.Quiet == false {
 					switch format {
@@ -403,6 +426,7 @@ func main() {
 				for h, v := range hostList {
 					if v == false {
 						badHosts = append(badHosts, h)
+						bar.Increment()
 					}
 				}
 				log.Printf("Command operation timed out! The following hosts haven't returned: %s\n", badHosts)
@@ -413,5 +437,7 @@ func main() {
 
 	if format == "json" {
 		fmt.Println("}")
+	} else if format == "bar" {
+		bar.Finish()
 	}
 }
