@@ -175,7 +175,7 @@ func (c *Command) Exec() CommandReturn {
 		cmd = "sudo " + cmd
 	}
 
-	debugOut.Printf("Executing command '%s'\n", cmd)
+	Debug.Printf("Executing command '%s'\n", cmd)
 
 	cr.HostObj = c.Host
 	cr.Command = cmd

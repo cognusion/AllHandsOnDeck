@@ -36,9 +36,9 @@ func dumpConfigs(conf Config) string {
 
 func loadConfigs(srcDir string) Config {
 	var conf Config
-	debugOut.Printf("Looking for configs in '%s'\n", srcDir)
+	Debug.Printf("Looking for configs in '%s'\n", srcDir)
 	for _, f := range readDirectory(srcDir) {
-		debugOut.Printf("\tReading config '%s'\n", f)
+		Debug.Printf("\tReading config '%s'\n", f)
 		conf = loadFile(f, conf)
 	}
 	return conf

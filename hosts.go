@@ -50,12 +50,12 @@ func (h *Host) SearchTags(tag string) bool {
 */
 func (h *Host) If(cond string) bool {
 
-	//debugOut.Printf("COND: %s\n",cond)
+	//Debug.Printf("COND: %s\n",cond)
 
 	if strings.Contains(cond, " and ") {
 		ands := strings.Split(cond, " and ")
 		for _, a := range ands {
-			//debugOut.Printf("\tAND: %s\n",a)
+			//Debug.Printf("\tAND: %s\n",a)
 			ret := h.If(a)
 			if ret == false {
 				return false
@@ -65,7 +65,7 @@ func (h *Host) If(cond string) bool {
 	} else if strings.Contains(cond, " && ") {
 		ands := strings.Split(cond, " && ")
 		for _, a := range ands {
-			//debugOut.Printf("\tAND: %s\n",a)
+			//Debug.Printf("\tAND: %s\n",a)
 			ret := h.If(a)
 			if ret == false {
 				return false
@@ -75,7 +75,7 @@ func (h *Host) If(cond string) bool {
 	} else if strings.Contains(cond, " or ") {
 		ors := strings.Split(cond, " or ")
 		for _, o := range ors {
-			//debugOut.Printf("\tOR: %s\n",o)
+			//Debug.Printf("\tOR: %s\n",o)
 			ret := h.If(o)
 			if ret == true {
 				return true
@@ -85,7 +85,7 @@ func (h *Host) If(cond string) bool {
 	} else if strings.Contains(cond, " || ") {
 		ors := strings.Split(cond, " || ")
 		for _, o := range ors {
-			//debugOut.Printf("\tOR: %s\n",o)
+			//Debug.Printf("\tOR: %s\n",o)
 			ret := h.If(o)
 			if ret == true {
 				return true
@@ -96,7 +96,7 @@ func (h *Host) If(cond string) bool {
 		// Single statement
 		parts := strings.Split(cond, " ")
 
-		//debugOut.Printf("\tDoes %s %s %s?\n",parts[0],parts[1],parts[2])
+		//Debug.Printf("\tDoes %s %s %s?\n",parts[0],parts[1],parts[2])
 
 		// Case/swtich to check each of the fields
 		found := false
@@ -130,7 +130,7 @@ func (h *Host) If(cond string) bool {
 			found = h.User == parts[2]
 		default:
 			// Hmmm...
-			debugOut.Printf("Conditional name '%s' does not exist!\n", parts[0])
+			Debug.Printf("Conditional name '%s' does not exist!\n", parts[0])
 			return false
 		}
 

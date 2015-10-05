@@ -78,7 +78,7 @@ func (w *Workflow) Exec(com Command) WorkflowReturn {
 	wr.HostObj = com.Host
 	wr.Completed = false
 
-	debugOut.Printf("Executing workflow %s\n", w.Name)
+	Debug.Printf("Executing workflow %s\n", w.Name)
 
 	// Per-wf override for sudo
 	if w.Sudo == true {
@@ -97,7 +97,7 @@ func (w *Workflow) Exec(com Command) WorkflowReturn {
 		if strings.HasPrefix(c, "QUIET ") {
 			// Set quiet, and mangle the command
 			c = strings.TrimPrefix(c, "QUIET ")
-			debugOut.Printf("Command quieted: '%s'\n", c)
+			Debug.Printf("Command quieted: '%s'\n", c)
 			com.Quiet = true
 		} else {
 			// Make sure we're not quiet

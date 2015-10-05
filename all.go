@@ -25,35 +25,6 @@ import (
 	"time"
 )
 
-// Config is a toplevel struct to house arrays of Hosts, Workflows, and Miscs
-type Config struct {
-	Hosts     []Host
-	Workflows []Workflow
-	Miscs     []Misc
-}
-
-// Merge properly merges the provided Config, into the parent Config
-func (c *Config) Merge(conf Config) {
-	c.Hosts = append(c.Hosts, conf.Hosts...)
-	c.Workflows = append(c.Workflows, conf.Workflows...)
-	c.Miscs = append(c.Miscs, conf.Miscs...)
-}
-
-// WorkflowIndex finds the named workflow in the Config, and
-// returns its index, or -1 if it is not found
-func (c *Config) WorkflowIndex(workflow string) int {
-	var flowIndex int = -1
-	for i, wf := range c.Workflows {
-		if wf.Name == workflow {
-			flowIndex = i
-			break
-		}
-	}
-	return flowIndex
-}
-
-var debugOut *log.Logger = log.New(ioutil.Discard, "", log.Lshortfile)
-
 var globalVars map[string]string
 
 func main() {
@@ -109,7 +80,7 @@ func main() {
 	flag.Parse()
 
 	if debug {
-		debugOut = log.New(os.Stdout, "[DEBUG]", log.Lshortfile)
+		SetDebug("")
 	}
 
 	// Handle the configs
@@ -253,7 +224,7 @@ func main() {
 
 	// To keep things sane, we gate the number of goros that can be executing remote
 	// commands to a limit.
-	debugOut.Printf("Max simultaneous execs set to %d\n", max)
+	Debug.Printf("Max simultaneous execs set to %d\n", max)
 	sem := semaphore.NewSemaphore(max)
 
 	// Status bar! Hosts * 2 because we have the exec phase,
@@ -261,7 +232,7 @@ func main() {
 	bar := pb.New(len(conf.Hosts) * 2)
 
 	if format == "bar" {
-		debugOut.Printf("BAR: Set to %d\n", len(conf.Hosts)*2)
+		Debug.Printf("BAR: Set to %d\n", len(conf.Hosts)*2)
 		bar.Start()
 	}
 
@@ -296,7 +267,7 @@ func main() {
 
 		// Add the host to the list, and set its return status to false
 		hostList[host.Name] = false
-		debugOut.Printf("Host: %s\n", host.Name)
+		Debug.Printf("Host: %s\n", host.Name)
 
 		// Handle alternate usernames
 		configUser := userName
@@ -350,7 +321,7 @@ func main() {
 		fmt.Println("{")
 	} else if format == "bar" {
 		// catchup
-		debugOut.Printf("BAR: Catching up on %d\n", len(conf.Hosts)-len(hostList))
+		Debug.Printf("BAR: Catching up on %d\n", len(conf.Hosts)-len(hostList))
 		bar.Add(len(conf.Hosts) - len(hostList))
 	}
 
