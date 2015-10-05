@@ -4,9 +4,7 @@ package main
 
 import (
 	"crypto/rand"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -14,6 +12,8 @@ import (
 	"strings"
 	"syscall"
 )
+
+var GlobalVars map[string]string
 
 // Misc is a simple key/value structure
 type Misc struct {
@@ -29,42 +29,10 @@ func miscToMap(miscs []Misc) map[string]string {
 	return mss
 }
 
-func dumpConfigs(conf Config) string {
-	j, _ := json.MarshalIndent(conf, "", "\t")
-	return string(j)
-}
-
-func loadConfigs(srcDir string) Config {
-	var conf Config
-	Debug.Printf("Looking for configs in '%s'\n", srcDir)
-	for _, f := range readDirectory(srcDir) {
-		Debug.Printf("\tReading config '%s'\n", f)
-		conf = loadFile(f, conf)
-	}
-	return conf
-}
-
 func readDirectory(srcDir string) []string {
 	// We can skip this error, since our pattern is fixed and known-good.
 	files, _ := filepath.Glob(srcDir + "*.json")
 	return files
-}
-
-func loadFile(filePath string, conf Config) Config {
-
-	buf, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		log.Fatalf("Error reading config file '%s': %s\n", filePath, err)
-	}
-
-	var newConf Config
-	err = json.Unmarshal(buf, &newConf)
-	if err != nil {
-		log.Fatalf("Error parsing JSON in config file '%s': %s\n", filePath, err)
-	}
-
-	conf.Merge(newConf)
-	return conf
 }
 
 func needsRestartingMangler(plist []string, drList []string) []string {

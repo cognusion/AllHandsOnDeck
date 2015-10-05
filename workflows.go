@@ -32,7 +32,7 @@ type Workflow struct {
 func (w *Workflow) varParse(s string) string {
 
 	// First check the global list
-	for k, v := range globalVars {
+	for k, v := range GlobalVars {
 		nk := "%" + k + "%"
 		if strings.Contains(s, nk) {
 			s = strings.Replace(s, nk, v, -1)
@@ -160,7 +160,7 @@ func (w *Workflow) handleFor(c string, com Command) ([]CommandReturn, error) {
 			//  an invalid list to operate on
 			return crs, fmt.Errorf("needs-restarting on host %s failed: %s\n", com.Host.Name, listRes.Error)
 		}
-		list = needsRestartingMangler(listRes.StdoutStrings(true), makeList([]string{globalVars["dontrestart-processes"]}))
+		list = needsRestartingMangler(listRes.StdoutStrings(true), makeList([]string{GlobalVars["dontrestart-processes"]}))
 	} else {
 		// Treat the middle of cparts as actual list items
 		list = makeList(cparts[1 : len(cparts)-1])
@@ -212,7 +212,7 @@ func (w *Workflow) handleSet(c string) error {
 
 	if strings.Contains(vvalue, "S3(") {
 		// We need a tokened S3 URL
-		vvalue, err = w.handleS3(vvalue, globalVars["awsaccess_key"], globalVars["awsaccess_secretkey"])
+		vvalue, err = w.handleS3(vvalue, GlobalVars["awsaccess_key"], GlobalVars["awsaccess_secretkey"])
 	} else if strings.Contains(vvalue, "RAND(") {
 		// We need a random string
 		vvalue, err = w.handleRand(vvalue)
@@ -229,9 +229,9 @@ func (w *Workflow) handleSet(c string) error {
 func (w *Workflow) handleS3(vvalue, accessKey, secretKey string) (string, error) {
 
 	// Confirm we actually have the bits set
-	if _, ok := globalVars["awsaccess_key"]; ok == false {
+	if _, ok := GlobalVars["awsaccess_key"]; ok == false {
 		return "", fmt.Errorf("No AWS access key set, but S3() called\n")
-	} else if _, ok := globalVars["awsaccess_secretkey"]; ok == false {
+	} else if _, ok := GlobalVars["awsaccess_secretkey"]; ok == false {
 		return "", fmt.Errorf("No AWS secret key set, but S3() called\n")
 	}
 

@@ -16,6 +16,8 @@ go build -o all
 
 ./all --help
 Usage of ./all:
+  -bar
+    	If outputting to a logfile, display a progress bar (default true)
   -cmd string
     	Command to run
   -configdump
@@ -26,14 +28,20 @@ Usage of ./all:
     	Load and parse configs, and exit
   -debug
     	Enable Debug output
+  -debuglogfile string
+    	Output debugs to a logfile, instead of standard error
+  -errorlogfile string
+    	Output errors to a logfile, instead of standard error
   -filter string
     	Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)
   -format string
-    	Output format. One of: text, json, xml, bar (default "text")
+    	Output format. One of: text, json, or xml (default "text")
   -listhosts
     	List the hostnames and addresses and exit
   -listworkflows
     	List the workflows and exit
+  -logfile string
+    	Output to a logfile, instead of standard out (enables progressbar to screen)
   -max int
     	Specify the maximum number of concurent commands to execute. Set to 0 to make a good guess for you (default 0)
   -quiet
@@ -41,13 +49,13 @@ Usage of ./all:
   -sshagent
     	Connect and use SSH-Agent vs. user key
   -sshkey string
-    	If not using the SSH-Agent, where to grab the key (default "/Users/M/.ssh/id_rsa")
+    	If not using the SSH-Agent, where to grab the key (default "~user/.ssh/id_rsa")
   -sudo
     	Whether to run commands via sudo
   -timeout int
     	Seconds before the entire operation times out (default 60)
   -user string
-    	User to run as (default "M")
+    	User to run as (default "user")
   -wave int
     	Specify which "wave" this should be applied to
   -workflow
@@ -210,6 +218,10 @@ Along with _awsaccess_secretkey_ below, these are used for Amazon Web Services o
 
 Along with _awsaccess_key_ above, these are used for Amazon Web Services operations that need credentials. Currently just creating S3 time-token URLs when using the _S3()_ workflow special command.
 
+### debugoutputlog
+
+Specifies where you want debug logging to go if you use _--debug_ (versus stderr).
+
 ### dontrestart-processes
 
 If you use the _FOR list ACTION_ workflow special command, this slightly misnamed config allows you to specify a comma-delimited list of processes you don't want to _ACTION_ under any circumstances.
@@ -219,6 +231,10 @@ If you use the _FOR list ACTION_ workflow special command, this slightly misname
 		"value": "udevd,mongod,tomcat,java,dirsrv,ns-slapd"
 	}
 ```
+
+### erroroutputlog
+
+Specifies where you want error logging to go (versus stderr).
 
 ### maxexecs
 
@@ -239,6 +255,12 @@ The default _-format_ is "text", and if you always want that to be something dif
 		"value": "json"
 	}
 ```
+
+Values are text, json, or xml.
+
+### outputlog
+
+Specifies where you want regular output to go (versus stdin).
 
 ### usesshagent
 
@@ -378,7 +400,6 @@ All was written for specific purposes 2013-2014, and is being ground-up rewritte
 4. Moar "Workflow Special Commands"
 6. Option to fail Workflow command on stderr content
 7. Better visibility into what is happening, including a "dryrun" facility
-8. Real logging
 
 **Pull requests are welcome**. If you're serious about wanting to hack at something here, please reach out. I may/probably have pointers or even stub code related to these.
 

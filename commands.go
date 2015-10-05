@@ -8,9 +8,9 @@ import (
 	"encoding/xml"
 	"fmt"
 	"golang.org/x/crypto/ssh"
-	"log"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // CommandReturn is a structure returned after executing a command
@@ -39,6 +39,7 @@ type commandOut struct {
 	Stdout  []string
 	Stderr  []string
 	Error   string
+	Date    time.Time
 }
 
 // StdoutString return the Stdout buffer as a string
@@ -79,6 +80,7 @@ func (cr *CommandReturn) format() commandOut {
 	f := commandOut{
 		Name:    cr.HostObj.Name,
 		Address: cr.HostObj.Address,
+		Date:    time.Now(),
 		Command: cr.Command,
 	}
 
@@ -87,7 +89,7 @@ func (cr *CommandReturn) format() commandOut {
 	}
 
 	if strings.Contains(cr.Command, "needs-restarting") {
-		plist := needsRestartingMangler(cr.StdoutStrings(true), makeList([]string{globalVars["dontrestart-processes"]}))
+		plist := needsRestartingMangler(cr.StdoutStrings(true), makeList([]string{GlobalVars["dontrestart-processes"]}))
 		f.Stdout = []string{"Restart list:"}
 		f.Stdout = append(f.Stdout, plist...)
 	} else {
@@ -112,51 +114,58 @@ func (cr *CommandReturn) ToXML() []byte {
 
 	j, err := xml.Marshal(f)
 	if err != nil {
-		fmt.Println("error:", err)
+		Error.Println("error:", err)
 	}
 
 	return j
 }
 
 // Process inspected the CommandReturn and outputs JSON
-func (cr *CommandReturn) ToJSON() []byte {
-	if cr.Quiet {
-		return nil
-	}
-
-	f := cr.format()
-
-	j, err := json.MarshalIndent(f, "\t", "\t")
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-
-	return j
-}
-
-// Process inspected the CommandReturn and outputs structured text
-func (cr *CommandReturn) ToText() {
+func (cr *CommandReturn) ToJSON(pretty bool) (j []byte) {
 	if cr.Quiet {
 		return
 	}
 
 	f := cr.format()
 
-	fmt.Printf("%s (%s): %s\n", f.Name, f.Address, f.Command)
+	var err error
+	if pretty == false {
+		j, err = json.Marshal(f)
+	} else {
+		j, err = json.MarshalIndent(f, "", "\t")
+	}
+
+	if err != nil {
+		Error.Println("error:", err)
+	}
+
+	return
+}
+
+// Process inspected the CommandReturn and outputs structured text
+func (cr *CommandReturn) ToText() (out string) {
+	if cr.Quiet {
+		return
+	}
+
+	f := cr.format()
+
+	out = out + fmt.Sprintf("%s (%s): %s\n", f.Name, f.Address, f.Command)
 	if len(f.Stdout) > 0 {
-		fmt.Println("STDOUT:")
+		out = out + "STDOUT:\n"
 		for _, l := range f.Stdout {
-			fmt.Println(l)
+			out = out + l + "\n"
 		}
 	}
 	if len(f.Stderr) > 0 {
-		fmt.Println("STDERR:")
+		out = out + "STDERR:\n"
 		for _, l := range f.Stderr {
-			fmt.Println(l)
+			out = out + l + "\n"
 		}
 	}
-	fmt.Println("END\n")
+	out = out + "END\n"
 
+	return
 }
 
 func (c *Command) Exec() CommandReturn {
@@ -164,7 +173,7 @@ func (c *Command) Exec() CommandReturn {
 	var cr CommandReturn
 
 	if c.Cmd == "" {
-		log.Printf("Command Exec request has no Cmd!")
+		Error.Printf("Command Exec request has no Cmd!")
 		cr.Error = fmt.Errorf("Command Exec request has no Cmd!")
 		return cr
 	}
@@ -197,7 +206,7 @@ func (c *Command) Exec() CommandReturn {
 
 	conn, err := ssh.Dial("tcp", connectName+":"+port, c.SSHConfig)
 	if err != nil {
-		log.Printf("Connection to %s on port %s failed: %s\n", connectName, port, err)
+		Error.Printf("Connection to %s on port %s failed: %s\n", connectName, port, err)
 		cr.Error = err
 		return cr
 	}
@@ -214,7 +223,7 @@ func (c *Command) Exec() CommandReturn {
 		}
 		// Request pseudo terminal
 		if err := session.RequestPty("xterm", 80, 80, modes); err != nil {
-			log.Printf("Request for pseudo terminal on %s failed: %s", connectName, err)
+			Error.Printf("Request for pseudo terminal on %s failed: %s", connectName, err)
 			cr.Error = err
 			return cr
 		}
@@ -227,7 +236,7 @@ func (c *Command) Exec() CommandReturn {
 	// Run the cmd
 	err = session.Run(cmd)
 	if err != nil {
-		log.Printf("Execution of command failed on %s: %s", connectName, err)
+		Error.Printf("Execution of command failed on %s: %s", connectName, err)
 		cr.Error = err
 	}
 	return cr

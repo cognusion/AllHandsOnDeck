@@ -29,11 +29,11 @@ func TestAll_ConfigMerge(t *testing.T) {
 	var c2 Config
 	var c3 Config
 	
-	c4 := loadFile("testconfigs/testdevhosts.json",c1)
+	c4 := loadConfigFile("testconfigs/testdevhosts.json",c1)
 	num1 := len(c4.Hosts)
-	c5 := loadFile("testconfigs/testprodhosts.json", c2)
+	c5 := loadConfigFile("testconfigs/testprodhosts.json", c2)
 	num2 := len(c5.Hosts)
-	c6 := loadFile("testconfigs/testmoarhosts.json", c3)
+	c6 := loadConfigFile("testconfigs/testmoarhosts.json", c3)
 	num3 := len(c6.Hosts)
 	merge1 := c4
 	merge1.Merge(c5)
@@ -50,7 +50,7 @@ func TestAll_ConfigMerge(t *testing.T) {
 
 func TestAll_WorkflowIndex(t *testing.T) {
 	var conf Config
-	conf = loadFile("testconfigs/testflows.json",conf)
+	conf = loadConfigFile("testconfigs/testflows.json",conf)
 	
 	if len(conf.Workflows) != 4 {
 		t.Error("Expected 4 workflows, got ", len(conf.Workflows))

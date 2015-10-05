@@ -9,11 +9,13 @@ import (
 var (
 	Debug *log.Logger
 	Log   *log.Logger
+	Error *log.Logger
 )
 
 func init() {
 	Debug = log.New(ioutil.Discard, "", log.Lshortfile)
-	Log = log.New(ioutil.Discard, "", log.Lshortfile)
+	Log = log.New(os.Stdout, "", 0)
+	Error = log.New(os.Stderr, "", 0)
 }
 
 func SetDebug(filename string) {
@@ -30,9 +32,21 @@ func SetDebug(filename string) {
 
 func SetLog(filename string) {
 	if filename == "" {
-		Log = log.New(os.Stdout, "", log.Lshortfile)
+		Log = log.New(os.Stdout, "", 0)
 	} else if lFile, err := openFile(filename); err == nil {
-		Log = log.New(lFile, "", log.Lshortfile)
+		Log = log.New(lFile, "", 0)
+	} else {
+		if err != nil {
+			log.Fatalf("Error opening log file '%s': %v\n", filename, err)
+		}
+	}
+}
+
+func SetError(filename string) {
+	if filename == "" {
+		Error = log.New(os.Stdout, "", 0)
+	} else if lFile, err := openFile(filename); err == nil {
+		Error = log.New(lFile, "", 0)
 	} else {
 		if err != nil {
 			log.Fatalf("Error opening log file '%s': %v\n", filename, err)

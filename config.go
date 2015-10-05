@@ -1,5 +1,11 @@
 package main
 
+import (
+	"encoding/json"
+	"io/ioutil"
+	"log"
+)
+
 // Config is a toplevel struct to house arrays of Hosts, Workflows, and Miscs
 type Config struct {
 	Hosts     []Host
@@ -25,4 +31,37 @@ func (c *Config) WorkflowIndex(workflow string) int {
 		}
 	}
 	return flowIndex
+}
+
+func dumpConfigs(conf Config) string {
+	j, _ := json.MarshalIndent(conf, "", "\t")
+	return string(j)
+}
+
+func loadConfigs(srcDir string) Config {
+	var conf Config
+	Debug.Printf("Looking for configs in '%s'\n", srcDir)
+	for _, f := range readDirectory(srcDir) {
+		Debug.Printf("\tReading config '%s'\n", f)
+		conf = loadConfigFile(f, conf)
+	}
+	return conf
+}
+
+func loadConfigFile(filePath string, conf Config) Config {
+
+	buf, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		log.Fatalf("Error reading config file '%s': %s\n", filePath, err)
+	}
+
+	var newConf Config
+	
+	err = json.Unmarshal(buf, &newConf)
+	if err != nil {
+		log.Fatalf("Error parsing JSON in config file '%s': %s\n", filePath, err)
+	}
+
+	conf.Merge(newConf)
+	return conf
 }

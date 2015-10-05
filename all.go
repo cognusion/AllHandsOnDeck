@@ -25,8 +25,6 @@ import (
 	"time"
 )
 
-var globalVars map[string]string
-
 func main() {
 
 	var (
@@ -48,6 +46,10 @@ func main() {
 		wave         int
 		max          int
 		format       string
+		logFile      string
+		errorLogFile string
+		debugLogFile string
+		progressBar  bool
 
 		conf    Config
 		auths   []ssh.AuthMethod
@@ -75,12 +77,23 @@ func main() {
 	flag.BoolVar(&listHosts, "listhosts", false, "List the hostnames and addresses and exit")
 	flag.BoolVar(&listFlows, "listworkflows", false, "List the workflows and exit")
 	flag.IntVar(&wave, "wave", 0, "Specify which \"wave\" this should be applied to")
-	flag.IntVar(&max, "max", 0, "Specify the maximum number of concurent commands to execute. Set to 0 to make a good guess for you")
-	flag.StringVar(&format, "format", "text", "Output format. One of: text, json, xml, or bar")
+	flag.IntVar(&max, "max", 0, "Specify the maximum number of concurent commands to execute. Set to 0 to make a good guess for you (default 0)")
+	flag.StringVar(&format, "format", "text", "Output format. One of: text, json, or xml")
+	flag.StringVar(&logFile, "logfile", "", "Output to a logfile, instead of standard out (enables progressbar to screen)")
+	flag.StringVar(&errorLogFile, "errorlogfile", "", "Output errors to a logfile, instead of standard error")
+	flag.StringVar(&debugLogFile, "debuglogfile", "", "Output debugs to a logfile, instead of standard error")
+	flag.BoolVar(&progressBar, "bar", true, "If outputting to a logfile, display a progress bar")
 	flag.Parse()
 
+	// Handle Logging
 	if debug {
-		SetDebug("")
+		SetDebug(debugLogFile)
+	}
+	if logFile != "" {
+		SetLog(logFile)
+	}
+	if errorLogFile != "" {
+		SetError(errorLogFile)
 	}
 
 	// Handle the configs
@@ -91,27 +104,42 @@ func main() {
 		conf = loadConfigs(configFolder)
 
 		// Build any needed global vars
-		globalVars = miscToMap(conf.Miscs)
+		GlobalVars = miscToMap(conf.Miscs)
 	}
 
 	/*
 	 * Any "miscs" config stuff here
 	 *
 	 */
-	if _, ok := globalVars["usesshagent"]; ok && globalVars["usesshagent"] == "true" {
+	if _, ok := GlobalVars["usesshagent"]; ok && GlobalVars["usesshagent"] == "true" {
 		sshAgent = true
 	}
 
-	if _, ok := globalVars["maxexecs"]; ok {
-		m, err := strconv.Atoi(globalVars["maxexecs"])
+	if _, ok := GlobalVars["maxexecs"]; ok {
+		m, err := strconv.Atoi(GlobalVars["maxexecs"])
 		if err != nil {
-			log.Fatalf("maxexecs set to '%s', and cannot convert to number: %s\n", globalVars["maxexecs"], err.Error())
+			log.Fatalf("maxexecs set to '%s', and cannot convert to number: %s\n", GlobalVars["maxexecs"], err.Error())
 		}
 		max = m
 	}
 
-	if f, ok := globalVars["outputformat"]; ok {
+	if f, ok := GlobalVars["outputformat"]; ok {
 		format = f
+	}
+
+	if l, ok := GlobalVars["outputlog"]; ok {
+		logFile = l
+		SetLog(l)
+	}
+
+	if l, ok := GlobalVars["erroroutputlog"]; ok {
+		errorLogFile = l
+		SetError(l)
+	}
+
+	if l, ok := GlobalVars["debugoutputlog"]; ok {
+		debugLogFile = l
+		SetDebug(l)
 	}
 
 	/*
@@ -158,8 +186,8 @@ func main() {
 	}
 
 	// Constrain format
-	if format != "text" && format != "json" && format != "xml" && format != "bar" {
-		log.Fatalln(`format must be one of "text", "json", "xml", or "bar"`)
+	if format != "text" && format != "json" && format != "xml" {
+		log.Fatalln(`format must be one of "text", "json", or "xml"`)
 	}
 
 	/*
@@ -231,7 +259,7 @@ func main() {
 	// and then the collection phase
 	bar := pb.New(len(conf.Hosts) * 2)
 
-	if format == "bar" {
+	if progressBar && logFile != "" {
 		Debug.Printf("BAR: Set to %d\n", len(conf.Hosts)*2)
 		bar.Start()
 	}
@@ -317,9 +345,7 @@ func main() {
 		}
 	}
 
-	if format == "json" {
-		fmt.Println("{")
-	} else if format == "bar" {
+	if progressBar {
 		// catchup
 		Debug.Printf("BAR: Catching up on %d\n", len(conf.Hosts)-len(hostList))
 		bar.Add(len(conf.Hosts) - len(hostList))
@@ -335,27 +361,23 @@ func main() {
 				bar.Increment()
 
 				if res.Completed == false {
-					log.Printf("Workflow %s did not fully complete\n", res.Name)
+					Error.Printf("Workflow %s did not fully complete\n", res.Name)
 				}
 
 				if quiet == false {
 					// Process all of the enclosed CommandReturns
 
-					for ci, c := range res.CommandReturns {
+					for _, c := range res.CommandReturns {
 						if c.Quiet {
 							continue
 						}
 						switch format {
 						case "text":
-							c.ToText()
+							Log.Println(c.ToText())
 						case "xml":
-							fmt.Println(string(c.ToXML()))
+							Log.Println(string(c.ToXML()))
 						case "json":
-							b := c.ToJSON()
-							if i < len(hostList)-1 || (ci < len(res.CommandReturns)-1 && res.CommandReturns[ci+1].Quiet == false) {
-								b = append(b, []byte(",")...)
-							}
-							fmt.Println("\t" + string(b))
+							Log.Println(string(c.ToJSON(false)))
 						}
 					}
 
@@ -368,7 +390,7 @@ func main() {
 						bar.Increment()
 					}
 				}
-				log.Printf("Workflow operation timed out! The following hosts haven't returned: %s\n", badHosts)
+				Error.Printf("Workflow operation timed out! The following hosts haven't returned: %s\n", badHosts)
 				return
 			}
 		} else {
@@ -381,15 +403,11 @@ func main() {
 				if quiet == false && res.Quiet == false {
 					switch format {
 					case "text":
-						res.ToText()
+						Log.Println(res.ToText())
 					case "xml":
-						fmt.Println(string(res.ToXML()))
+						Log.Println(string(res.ToXML()))
 					case "json":
-						b := res.ToJSON()
-						if i < len(hostList)-1 {
-							b = append(b, []byte(",")...)
-						}
-						fmt.Println("\t" + string(b))
+						Log.Println(string(res.ToJSON(false)))
 					}
 				}
 			case <-time.After(time.Duration(timeout) * time.Second):
@@ -400,15 +418,13 @@ func main() {
 						bar.Increment()
 					}
 				}
-				log.Printf("Command operation timed out! The following hosts haven't returned: %s\n", badHosts)
+				Error.Printf("Command operation timed out! The following hosts haven't returned: %s\n", badHosts)
 				return
 			}
 		}
 	}
 
-	if format == "json" {
-		fmt.Println("}")
-	} else if format == "bar" {
+	if progressBar && logFile != "" {
 		bar.Finish()
 	}
 }
