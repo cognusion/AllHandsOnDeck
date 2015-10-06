@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// CommandReturn is a structure returned after executing a command
+// CommandReturn is a structure returned after executing a Command
 type CommandReturn struct {
 	Hostname string
 	HostObj  Host
@@ -24,6 +24,8 @@ type CommandReturn struct {
 	Quiet    bool
 }
 
+// Command is a structure to hold the necessary info to execute
+// a command
 type Command struct {
 	Cmd       string
 	Host      Host
@@ -32,14 +34,16 @@ type Command struct {
 	Quiet     bool
 }
 
+// commandOut is a helper struct to allow easier formating
+// of CommandResults for output
 type commandOut struct {
 	Name    string
 	Address string
 	Command string
+	Date    time.Time
 	Stdout  []string
 	Stderr  []string
 	Error   string
-	Date    time.Time
 }
 
 // StdoutString return the Stdout buffer as a string
@@ -168,9 +172,8 @@ func (cr *CommandReturn) ToText() (out string) {
 	return
 }
 
-func (c *Command) Exec() CommandReturn {
-
-	var cr CommandReturn
+// Execute the Command structure, returning a CommandReturn
+func (c *Command) Exec() (cr CommandReturn) {
 
 	if c.Cmd == "" {
 		Error.Printf("Command Exec request has no Cmd!")
@@ -180,16 +183,19 @@ func (c *Command) Exec() CommandReturn {
 
 	cmd := c.Cmd
 
+	// Do we need to prepend sudo?
 	if c.Sudo {
 		cmd = "sudo " + cmd
 	}
 
 	Debug.Printf("Executing command '%s'\n", cmd)
 
-	cr.HostObj = c.Host
-	cr.Command = cmd
-	cr.Quiet = c.Quiet
-	cr.Error = nil
+	cr = CommandReturn{
+		HostObj: c.Host,
+		Command: cmd,
+		Quiet:   c.Quiet,
+		Error:   nil,
+	}
 
 	var connectName string
 	if c.Host.Address != "" {
@@ -208,7 +214,7 @@ func (c *Command) Exec() CommandReturn {
 	if err != nil {
 		Error.Printf("Connection to %s on port %s failed: %s\n", connectName, port, err)
 		cr.Error = err
-		return cr
+		return
 	}
 
 	session, _ := conn.NewSession()
@@ -225,7 +231,7 @@ func (c *Command) Exec() CommandReturn {
 		if err := session.RequestPty("xterm", 80, 80, modes); err != nil {
 			Error.Printf("Request for pseudo terminal on %s failed: %s", connectName, err)
 			cr.Error = err
-			return cr
+			return
 		}
 	}
 
@@ -239,34 +245,50 @@ func (c *Command) Exec() CommandReturn {
 		Error.Printf("Execution of command failed on %s: %s", connectName, err)
 		cr.Error = err
 	}
-	return cr
+	return
 
 }
 
+// Given a list of services to operate on, Do The Right Thing
 func serviceList(op string, list []string, res chan<- CommandReturn, com Command) {
 
 	// sshd needs to restart first, completely, before other things fly
-	for _, p := range list {
-
-		if p == "sshd" {
-			serviceCommand := "service " + p + " " + op + "; sleep 2"
-			com.Cmd = serviceCommand
-			res <- com.Exec()
-			break
+	if op == "restart" {
+		for _, p := range list {
+			if p == "sshd" {
+				serviceCommand := "service " + p + " " + op + "; sleep 2"
+				com.Cmd = serviceCommand
+				res <- com.Exec()
+				break
+			}
 		}
 	}
 
 	for _, p := range list {
 		if p == "sshd" {
 			// Skip sshd, as we've already restarted it above, if appropriate
+			// or will stop it below, if appropriate
 			continue
 		}
-		serviceCommand := "service " + p + " " + op + "; sleep 2"
-		com.Cmd = serviceCommand
+		com.Cmd = "service " + p + " " + op + "; sleep 2"
+
+		// We're executing these concurrently
 		go func(com Command) {
 			res <- com.Exec()
 		}(com)
 
+	}
+
+	// sshd needs to stop first, completely, after everything else
+	if op == "stop" {
+		for _, p := range list {
+			if p == "sshd" {
+				serviceCommand := "service " + p + " " + op + "; sleep 2"
+				com.Cmd = serviceCommand
+				res <- com.Exec()
+				break
+			}
+		}
 	}
 }
 

@@ -33,21 +33,24 @@ func (c *Config) WorkflowIndex(workflow string) int {
 	return flowIndex
 }
 
+// Return a formatted JSON string representation of the config
 func dumpConfigs(conf Config) string {
 	j, _ := json.MarshalIndent(conf, "", "\t")
 	return string(j)
 }
 
+// Given a directory, load all the configs
 func loadConfigs(srcDir string) Config {
 	var conf Config
 	Debug.Printf("Looking for configs in '%s'\n", srcDir)
-	for _, f := range readDirectory(srcDir) {
+	for _, f := range readDirectory(srcDir, "*.json") {
 		Debug.Printf("\tReading config '%s'\n", f)
 		conf = loadConfigFile(f, conf)
 	}
 	return conf
 }
 
+// Load the given config file into the specified config
 func loadConfigFile(filePath string, conf Config) Config {
 
 	buf, err := ioutil.ReadFile(filePath)
@@ -56,7 +59,7 @@ func loadConfigFile(filePath string, conf Config) Config {
 	}
 
 	var newConf Config
-	
+
 	err = json.Unmarshal(buf, &newConf)
 	if err != nil {
 		log.Fatalf("Error parsing JSON in config file '%s': %s\n", filePath, err)

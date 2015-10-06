@@ -12,12 +12,14 @@ var (
 	Error *log.Logger
 )
 
+// Ensure we have sane defaults from the start
 func init() {
 	Debug = log.New(ioutil.Discard, "", log.Lshortfile)
 	Log = log.New(os.Stdout, "", 0)
 	Error = log.New(os.Stderr, "", 0)
 }
 
+// Set the debug log
 func SetDebug(filename string) {
 	if filename == "" {
 		Debug = log.New(os.Stderr, "[DEBUG]", log.Lshortfile)
@@ -30,6 +32,7 @@ func SetDebug(filename string) {
 	}
 }
 
+// Set the standard log
 func SetLog(filename string) {
 	if filename == "" {
 		Log = log.New(os.Stdout, "", 0)
@@ -42,6 +45,7 @@ func SetLog(filename string) {
 	}
 }
 
+// Set the error log
 func SetError(filename string) {
 	if filename == "" {
 		Error = log.New(os.Stdout, "", 0)

@@ -56,8 +56,10 @@ func main() {
 		wfIndex int
 	)
 
+	// Grab the current username, best we can
 	currentUser, _ := user.Current()
 
+	// Channels for command and workflow -results
 	commandResults := make(chan CommandReturn, 10)
 	wfResults := make(chan WorkflowReturn, 10)
 
@@ -85,7 +87,10 @@ func main() {
 	flag.BoolVar(&progressBar, "bar", true, "If outputting to a logfile, display a progress bar")
 	flag.Parse()
 
-	// Handle Logging
+	/*
+	 * Initially handle Logging: debug, error, and "standard"
+	 * HINT: We do this again after the configs have been solidified
+	 */
 	if debug {
 		SetDebug(debugLogFile)
 	}
@@ -96,11 +101,15 @@ func main() {
 		SetError(errorLogFile)
 	}
 
-	// Handle the configs
+	/*
+	 * Handle the configs
+	 *
+	 */
 	if configFolder == "" {
 		log.Fatalln("--configs must be set!")
 	} else {
-		// Load the conf object
+		// Load the conf object from the config
+		// files in the configFolder
 		conf = loadConfigs(configFolder)
 
 		// Build any needed global vars
@@ -144,7 +153,8 @@ func main() {
 
 	/*
 	 * All the breaking options here
-	 *
+	 * Use "fmt" in lieu of "Log" for
+	 * stdout
 	 */
 	if configDump {
 		// Dump the config
@@ -155,6 +165,7 @@ func main() {
 		fmt.Println("Config loaded and bootstrapped successfully...")
 		os.Exit(0)
 	} else if listHosts {
+		// List all the configured hosts, and exit
 		for _, host := range conf.Hosts {
 			if host.Offline == true {
 				continue
@@ -169,6 +180,7 @@ func main() {
 		}
 		os.Exit(0)
 	} else if listFlows {
+		// List all the configured workflows, and exit
 		for _, flow := range conf.Workflows {
 			fmt.Printf("%s\n", flow.Name)
 		}
@@ -194,6 +206,8 @@ func main() {
 	 * We are not allowing multiple keys, or key-per-hosts. If you need to possibly use
 	 * multiple keys, ensure ssh-agent is running and has them added, and execute with
 	 * --sshagent
+	 *
+	 * TODO: Windows?
 	 */
 	if sshAgent {
 		// use SSH-Agent
@@ -231,9 +245,6 @@ func main() {
 		if max == 0 {
 			// Autoconfig max execs
 			max = saneMaxLimitFromWorkflow(conf.Workflows[wfIndex])
-		} else if max == -1 {
-			// Autoconfig based on GOMAXPROCS (lame)
-			max = runtime.GOMAXPROCS(0)
 		}
 
 		// Init the workflow
@@ -244,10 +255,12 @@ func main() {
 		if max == 0 {
 			// Autoconfig max execs
 			max = saneMaxLimit(1)
-		} else if max == -1 {
-			// Autoconfig based on GOMAXPROCS (lame)
-			max = runtime.GOMAXPROCS(0)
 		}
+	}
+
+	// Autoconfig based on GOMAXPROCS (lame)
+	if max == -1 {
+		max = runtime.GOMAXPROCS(0)
 	}
 
 	// To keep things sane, we gate the number of goros that can be executing remote
@@ -345,8 +358,14 @@ func main() {
 		}
 	}
 
+	/*
+	 * Post-run, pre-result cleanups
+	 *
+	 */
 	if progressBar {
-		// catchup
+		// It's highly likely that we filtered out a bunch of hosts, and
+		// while we incremented the bar as those came along, we still have
+		// the response pass to reconcile
 		Debug.Printf("BAR: Catching up on %d\n", len(conf.Hosts)-len(hostList))
 		bar.Add(len(conf.Hosts) - len(hostList))
 	}
@@ -424,6 +443,10 @@ func main() {
 		}
 	}
 
+	/*
+	 * Post-result, pre-exit cleanups
+	 *
+	 */
 	if progressBar && logFile != "" {
 		bar.Finish()
 	}

@@ -71,12 +71,13 @@ func (w *Workflow) Init() {
 }
 
 // Exec executes a workflow against the supplied Host
-func (w *Workflow) Exec(com Command) WorkflowReturn {
+func (w *Workflow) Exec(com Command) (wr WorkflowReturn) {
 
-	var wr WorkflowReturn
-	wr.Name = w.Name
-	wr.HostObj = com.Host
-	wr.Completed = false
+	wr = WorkflowReturn{
+		Name:      w.Name,
+		HostObj:   com.Host,
+		Completed: false,
+	}
 
 	Debug.Printf("Executing workflow %s\n", w.Name)
 
@@ -107,7 +108,7 @@ func (w *Workflow) Exec(com Command) WorkflowReturn {
 		if strings.HasPrefix(c, "%%") {
 			// %%anotherworkflowname
 			log.Printf("Chaining workflows currently unsupported!\n")
-			return wr
+			return
 
 		} else if strings.HasPrefix(c, "FOR ") {
 			// FOR list ACTION
@@ -117,7 +118,7 @@ func (w *Workflow) Exec(com Command) WorkflowReturn {
 			}
 			if err != nil {
 				log.Printf("Error during FOR: %s\n", err)
-				return wr
+				return
 			}
 		} else {
 			// Regular command
@@ -127,14 +128,14 @@ func (w *Workflow) Exec(com Command) WorkflowReturn {
 			if res.Error != nil && (len(w.CommandBreaks) == 0 || w.CommandBreaks[i] == true) {
 				// We have a valid error, and either we're not using CommandBreaks (assume breaks)
 				//	or we are using CommandBreaks, and they're true
-				return wr
+				return
 			}
 		}
 	}
 	// POST: No errors
 
 	wr.Completed = true
-	return wr
+	return
 }
 
 func (w *Workflow) handleFor(c string, com Command) ([]CommandReturn, error) {
@@ -189,9 +190,8 @@ func (w *Workflow) handleFor(c string, com Command) ([]CommandReturn, error) {
 
 }
 
-func (w *Workflow) handleSet(c string) error {
+func (w *Workflow) handleSet(c string) (err error) {
 
-	var err error
 	cparts := strings.Split(c, " ")
 
 	if len(cparts) < 3 {
@@ -203,7 +203,7 @@ func (w *Workflow) handleSet(c string) error {
 
 	if _, ok := w.vars[vname]; ok {
 		// already set, bail
-		return nil
+		return
 	}
 
 	vvalue := strings.Join(cparts[2:len(cparts)], " ") // concatenate any end parts
@@ -218,11 +218,10 @@ func (w *Workflow) handleSet(c string) error {
 		vvalue, err = w.handleRand(vvalue)
 	}
 
-	if err != nil {
-		return err
+	if err == nil {
+		w.vars[vname] = vvalue
 	}
 
-	w.vars[vname] = vvalue
 	return nil
 }
 
@@ -263,6 +262,7 @@ func (w *Workflow) handleRand(vvalue string) (string, error) {
 	return rparts[1] + randString(n) + rparts[3], nil
 }
 
+// Get a saneMaxLimit, based on the number of commands in the workflow
 func saneMaxLimitFromWorkflow(wf Workflow) int {
 	return saneMaxLimit(len(wf.Commands))
 }

@@ -191,6 +191,7 @@ func TestRandString(t *testing.T) {
 	}
 }
 
+// Helper function to determine the equality of two string arrays
 func stringArrayEquality(X, Y []string) bool {
 
 	// Obvious
