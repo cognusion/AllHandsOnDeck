@@ -389,6 +389,23 @@ One thing to remember, especially with regards to the timeouts, is that All does
 
 There is a gating mechanism that keeps the number of simultaneous operations to a sane limit in order to prevent exhausting socket/open file resources on the running host (I'm looking at you, MacOS). _-max_ on the CLI or the misc _maxexecs_ controls how many can be executing at a time (by way of a semaphore). By default this is set to 0, which causes All to make a pretty decent guess by taking the OS limit for open files, subtracting how many files are currently open by the process, and dividing all that by twice the number of commands in the requested workflow. **If this is resulting in "out of file" errors please submit an issue report!** Of course, you can downlimit this to save yourself some cycles. You can also change your open file limit by using ulimit, ala _uilimit -n 1024_ or whatever.
 
+## Silence
+
+If you want no output whatsoever because reasons:
+
+```bash
+all -logfile=/dev/null -errorlogfile=/dev/null -bar=false
+
+```
+
+## Windows
+
+All builds on Windows platforms, however there are some quirks:
+
+* Windows builds aren't generally tested beyond assuring they build clean
+* The _maxexecs_ autodetection is completely unavailable, and set to _GOMAXPROCS_ if 
+autodetection is requested
+
 
 Forward, Ho
 ===========
