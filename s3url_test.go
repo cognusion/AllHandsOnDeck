@@ -4,9 +4,9 @@ import (
 	"testing"
 )
 
-var s1 string = "s3://thisisthebucket/path/to/file.zip"
-var s2 string = "http://thisisthebucket.s3.amazonaws.com/path/to/file.zip?someparam=somevalue"
-var s3 string = "https://thisisthebucket.s3.amazonaws.com/path/to/file.zip?someparam=somevalue"
+var string1 string = "s3://thisisthebucket/path/to/file.zip"
+var string2 string = "http://thisisthebucket.s3.amazonaws.com/path/to/file.zip?someparam=somevalue"
+var string3 string = "https://thisisthebucket.s3.amazonaws.com/path/to/file.zip?someparam=somevalue"
 
 func TestS3_TokenGen(t *testing.T) {
 	bucket := "thisisthbucket"
@@ -38,7 +38,7 @@ func TestS3_TokenGen(t *testing.T) {
 }
 
 func TestS3_S3Parts(t *testing.T) {
-	s3u := s3UrlToParts(s1)
+	s3u := s3UrlToParts(string1)
 	if s3u.Bucket != "thisisthebucket" {
 		t.Error("Expected bucket 'thisisthebucket', got ", s3u.Bucket)
 	}
@@ -51,8 +51,8 @@ func TestS3_S3Parts(t *testing.T) {
 }
 
 func TestS3_HTTPParts(t *testing.T) {
-	http := s3UrlToParts(s2)
-	https := s3UrlToParts(s3)
+	http := s3UrlToParts(string2)
+	https := s3UrlToParts(string3)
 
 	// Test equality between HTTP and HTTPS
 	if http.Bucket != https.Bucket {
