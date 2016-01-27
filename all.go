@@ -50,6 +50,7 @@ func main() {
 		errorLogFile string
 		debugLogFile string
 		progressBar  bool
+		dryrun       bool
 
 		conf    Config
 		auths   []ssh.AuthMethod
@@ -85,6 +86,7 @@ func main() {
 	flag.StringVar(&errorLogFile, "errorlogfile", "", "Output errors to a logfile, instead of standard error")
 	flag.StringVar(&debugLogFile, "debuglogfile", "", "Output debugs to a logfile, instead of standard error")
 	flag.BoolVar(&progressBar, "bar", true, "If outputting to a logfile, display a progress bar")
+	flag.BoolVar(&dryrun, "dryrun", false, "If you want to go through the motions, but never actually SSH to anything")
 	flag.Parse()
 
 	/*
@@ -267,6 +269,11 @@ func main() {
 	// commands to a limit.
 	Debug.Printf("Max simultaneous execs set to %d\n", max)
 	sem := semaphore.NewSemaphore(max)
+
+	// If we're doing a dryrun, this is the end of the line
+	if dryrun {
+		return
+	}
 
 	// Status bar! Hosts * 2 because we have the exec phase,
 	// and then the collection phase
