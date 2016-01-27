@@ -272,7 +272,7 @@ func main() {
 
 	// If we're doing a dryrun, this is the end of the line
 	if dryrun {
-		return
+		GlobalVars["dryrun"] = "yup"
 	}
 
 	// Status bar! Hosts * 2 because we have the exec phase,

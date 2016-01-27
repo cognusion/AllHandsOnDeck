@@ -30,6 +30,8 @@ Usage of ./all:
     	Enable Debug output
   -debuglogfile string
     	Output debugs to a logfile, instead of standard error
+  -dryrun
+    	If you want to go through the motions, but never actually SSH to anything
   -errorlogfile string
     	Output errors to a logfile, instead of standard error
   -filter string
@@ -416,7 +418,6 @@ All was written for specific purposes 2013-2014, and is being ground-up rewritte
 3. allsh, the All shell
 4. Moar "Workflow Special Commands"
 6. Option to fail Workflow command on stderr content
-7. Better visibility into what is happening, including a "dryrun" facility
 
 **Pull requests are welcome**. If you're serious about wanting to hack at something here, please reach out. I may/probably have pointers or even stub code related to these.
 

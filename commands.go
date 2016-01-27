@@ -210,41 +210,46 @@ func (c *Command) Exec() (cr CommandReturn) {
 		port = strconv.Itoa(c.Host.Port)
 	}
 
-	conn, err := ssh.Dial("tcp", connectName+":"+port, c.SSHConfig)
-	if err != nil {
-		Error.Printf("Connection to %s on port %s failed: %s\n", connectName, port, err)
-		cr.Error = err
-		return
-	}
-
-	session, _ := conn.NewSession()
-	defer session.Close()
-
-	if c.Sudo {
-		// Set up terminal modes
-		modes := ssh.TerminalModes{
-			ssh.ECHO:          0,     // disable echoing
-			ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
-			ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
-		}
-		// Request pseudo terminal
-		if err := session.RequestPty("xterm", 80, 80, modes); err != nil {
-			Error.Printf("Request for pseudo terminal on %s failed: %s", connectName, err)
+	if _, ok := GlobalVars["dryrun"]; ok == false {
+		// We're doing it live
+		
+		conn, err := ssh.Dial("tcp", connectName+":"+port, c.SSHConfig)
+		if err != nil {
+			Error.Printf("Connection to %s on port %s failed: %s\n", connectName, port, err)
 			cr.Error = err
 			return
 		}
-	}
 
-	// Set stdout/err to our byte buffers
-	session.Stdout = &cr.Stdout
-	session.Stderr = &cr.Stderr
+		session, _ := conn.NewSession()
+		defer session.Close()
 
-	// Run the cmd
-	err = session.Run(cmd)
-	if err != nil {
-		Error.Printf("Execution of command failed on %s: %s", connectName, err)
-		cr.Error = err
+		if c.Sudo {
+			// Set up terminal modes
+			modes := ssh.TerminalModes{
+				ssh.ECHO:          0,     // disable echoing
+				ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
+				ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
+			}
+			// Request pseudo terminal
+			if err := session.RequestPty("xterm", 80, 80, modes); err != nil {
+				Error.Printf("Request for pseudo terminal on %s failed: %s", connectName, err)
+				cr.Error = err
+				return
+			}
+		}
+
+		// Set stdout/err to our byte buffers
+		session.Stdout = &cr.Stdout
+		session.Stderr = &cr.Stderr
+
+		// Run the cmd
+		err = session.Run(cmd)
+		if err != nil {
+			Error.Printf("Execution of command failed on %s: %s", connectName, err)
+			cr.Error = err
+		}
 	}
+	
 	return
 
 }
