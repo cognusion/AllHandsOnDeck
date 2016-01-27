@@ -89,7 +89,7 @@ Configs
 
 So how would you tag your hosts? There aren't any hosts listed on that command up there. Relax, we got this.
 
-All reads all the .json files in the --configs folder (defaults to "configs/" for convenience). Host and Workflow config stanzas may be smattered about, and will all get merged together when All reads them. 
+All reads all of the .json files in the --configs folder (defaults to "configs/" for convenience). Host and Workflow config stanzas may be smattered about, and will all get merged together when All reads them. 
 
 Some utilities like giving configs fancy names like "recipes" or "playbooks" so they seem like more than they are. I don't. These configs are still fancy, though.
 
@@ -262,7 +262,7 @@ Values are text, json, or xml.
 
 ### outputlog
 
-Specifies where you want regular output to go (versus stdin).
+Specifies where you want regular output to go (versus stdout).
 
 ### usesshagent
 
@@ -277,7 +277,7 @@ If you always want to use an SSH agent, it's obnoxious to specify it on the CLI 
 Filters
 =======
 
-So filters are pretty neat-looking, ya? Filters may be specified on the command-line via --filter, or as a value of the "filter" element of a workflow.
+So filters are pretty neat-looking, ya? Filters may be specified on the command-line via --filter, and/or as a value of the "filter" element of a workflow.
 
 Filters are broken up by the boolean 'and' then 'or', so "Tags != noupdate and Tags == yum or Tags == azl and Name != ugly" *first* gets looked at as:
 
@@ -389,7 +389,7 @@ One thing to remember, especially with regards to the timeouts, is that All does
 
 ### Maxexecs
 
-There is a gating mechanism that keeps the number of simultaneous operations to a sane limit in order to prevent exhausting socket/open file resources on the running host (I'm looking at you, MacOS). _-max_ on the CLI or the misc _maxexecs_ controls how many can be executing at a time (by way of a semaphore). By default this is set to 0, which causes All to make a pretty decent guess by taking the OS limit for open files, subtracting how many files are currently open by the process, and dividing all that by twice the number of commands in the requested workflow. **If this is resulting in "out of file" errors please submit an issue report!** Of course, you can downlimit this to save yourself some cycles. You can also change your open file limit by using ulimit, ala _uilimit -n 1024_ or whatever.
+There is a gating mechanism that keeps the number of simultaneous operations to a sane limit in order to prevent exhausting socket/open file resources on the running host (I'm looking at you, MacOS). _-max_ on the CLI or the misc _maxexecs_ controls how many can be executing at a time (by way of a semaphore). By default this is set to 0, which causes All to make a pretty decent guess by taking the OS limit for open files, subtracting how many files are currently open by the process, and dividing all that by twice the number of commands in the requested workflow. **If this is resulting in "out of file" errors please submit an issue report!** Of course, you can downlimit this to save yourself some cycles. You can also change your open file limit by using ulimit, ala _ulimit -n 1024_ or whatever.
 
 ## Silence
 
