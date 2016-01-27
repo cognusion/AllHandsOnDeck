@@ -33,6 +33,30 @@ func (c *Config) WorkflowIndex(workflow string) int {
 	return flowIndex
 }
 
+// Given a filter, count the matching hosts
+func (c *Config) FilteredHostCount(filter string, wave int) (count int) {
+	if filter == "" && wave == 0 {
+		count = len(c.Hosts)
+		return
+	}
+	
+	count = 0
+	for _, host := range c.Hosts {
+		if host.Offline == true {
+			continue
+		} else if filter != "" && host.If(filter) == false {
+			// Check to see if the this host matches our filter
+			continue
+		} else if wave != 0 && host.Wave != wave {
+			// Check to see if we're using waves, and if this is in it
+			continue
+		}
+		count++
+	}
+
+	return
+}
+
 // Return a formatted JSON string representation of the config
 func dumpConfigs(conf Config) string {
 	j, _ := json.MarshalIndent(conf, "", "\t")

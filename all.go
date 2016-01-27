@@ -277,10 +277,12 @@ func main() {
 
 	// Status bar! Hosts * 2 because we have the exec phase,
 	// and then the collection phase
-	bar := pb.New(len(conf.Hosts) * 2)
+	fhosts := conf.FilteredHostCount(filter, wave)
+	Debug.Printf("FilteredHostCount: %d\n", fhosts)
+	bar := pb.New(fhosts * 2)
 
 	if progressBar && logFile != "" {
-		Debug.Printf("BAR: Set to %d\n", len(conf.Hosts)*2)
+		Debug.Printf("BAR: Set to %d\n", fhosts*2)
 		bar.Start()
 	}
 
@@ -291,19 +293,16 @@ func main() {
 
 		// Check to see if the host is offline
 		if host.Offline == true {
-			bar.Increment()
 			continue
 		}
 
 		// Check to see if we're using waves, and if this is in it
 		if wave != 0 && host.Wave != wave {
-			bar.Increment()
 			continue
 		}
 
 		// Check to see if the this host matches our filter
 		if filter != "" && host.If(filter) == false {
-			bar.Increment()
 			continue
 		}
 
@@ -373,8 +372,8 @@ func main() {
 		// It's highly likely that we filtered out a bunch of hosts, and
 		// while we incremented the bar as those came along, we still have
 		// the response pass to reconcile
-		Debug.Printf("BAR: Catching up on %d\n", len(conf.Hosts)-len(hostList))
-		bar.Add(len(conf.Hosts) - len(hostList))
+		Debug.Printf("BAR: Catching up on %d\n", fhosts-len(hostList))
+		bar.Add(fhosts - len(hostList))
 	}
 
 	// We wait for all the goros to finish up
@@ -398,12 +397,14 @@ func main() {
 							continue
 						}
 						switch format {
-						case "text":
-							Log.Println(c.ToText())
 						case "xml":
 							Log.Println(string(c.ToXML()))
 						case "json":
 							Log.Println(string(c.ToJSON(false)))
+						case "text":
+							fallthrough
+						default:
+							Log.Println(c.ToText())
 						}
 					}
 
@@ -428,12 +429,14 @@ func main() {
 
 				if quiet == false && res.Quiet == false {
 					switch format {
-					case "text":
-						Log.Println(res.ToText())
 					case "xml":
 						Log.Println(string(res.ToXML()))
 					case "json":
 						Log.Println(string(res.ToJSON(false)))
+					case "text":
+						fallthrough
+					default:
+						Log.Println(res.ToText())
 					}
 				}
 			case <-time.After(time.Duration(timeout) * time.Second):
