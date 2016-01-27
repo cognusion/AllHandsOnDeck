@@ -88,6 +88,11 @@ func (w *Workflow) Exec(com Command) (wr WorkflowReturn) {
 
 	for i, c := range w.Commands {
 
+		if strings.HasPrefix(c, "#") {
+			// Comment
+			continue
+		}
+		
 		if strings.HasPrefix(c, "SET ") {
 			// SET %varname% "some string"
 			// Handled by Init()
