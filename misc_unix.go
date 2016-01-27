@@ -31,11 +31,15 @@ func saneMaxLimit(sessionCount int) int {
 	}
 
 	of := len(getOpenFiles()) - 1
-	avail := int(rLimit.Cur) - of
+	oflimit := int(rLimit.Cur)
+	avail :=  oflimit - of
 
 	if sessionCount < 1 {
 		// Sanity
 		sessionCount = 1
 	}
+	
+	Debug.Printf("Open files: %d of %d (%d avail). Session count: %d\n", of, oflimit, avail, sessionCount)
+	
 	return avail / (sessionCount * 2)
 }
