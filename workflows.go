@@ -269,5 +269,13 @@ func (w *Workflow) handleRand(vvalue string) (string, error) {
 
 // Get a saneMaxLimit, based on the number of commands in the workflow
 func saneMaxLimitFromWorkflow(wf Workflow) int {
-	return saneMaxLimit(len(wf.Commands))
+	// We need to count the commands, but factor out "SET" and "#"
+	c := 0
+	for _,command := range wf.Commands {
+		if strings.HasPrefix(command, "SET ") || strings.HasPrefix(command, "#") {
+			continue
+		}
+		c++
+	}
+	return saneMaxLimit(c)
 }
