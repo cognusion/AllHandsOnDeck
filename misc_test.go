@@ -28,7 +28,7 @@ var rsyslogTest []string = []string{"1129 : /sbin/rsyslogd"}
 var nagiosTest []string = strings.Split(`2494 : /sbin/mingetty /dev/tty3 
 2496 : /sbin/mingetty /dev/tty4 
 12462 : /usr/sbin/nagios -d /etc/nagios/nagios.cfg 
-`,"\n")
+`, "\n")
 
 var sshTest []string = strings.Split(`2812 : sshd: ec2-user [priv]
 sshd: ec2-user@pts/0

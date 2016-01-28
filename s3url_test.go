@@ -26,7 +26,7 @@ func TestS3_TokenGen(t *testing.T) {
 	if s3u.Path != path {
 		t.Errorf("Expected '%s', got %s\n", path, s3u.Path)
 	}
-	
+
 	// AWSAccessKeyId=1234567890
 	// Expires=1438229728
 	// Signature=ed5UfNSZI30BApl2IWEHhjs0ujQ%3D

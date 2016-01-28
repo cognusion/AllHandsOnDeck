@@ -212,7 +212,7 @@ func (c *Command) Exec() (cr CommandReturn) {
 
 	if _, ok := GlobalVars["dryrun"]; ok == false {
 		// We're doing it live
-		
+
 		conn, err := ssh.Dial("tcp", connectName+":"+port, c.SSHConfig)
 		if err != nil {
 			Error.Printf("Connection to %s on port %s failed: %s\n", connectName, port, err)
@@ -249,7 +249,7 @@ func (c *Command) Exec() (cr CommandReturn) {
 			cr.Error = err
 		}
 	}
-	
+
 	return
 
 }

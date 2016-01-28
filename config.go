@@ -39,7 +39,7 @@ func (c *Config) FilteredHostCount(filter string, wave int) (count int) {
 		count = len(c.Hosts)
 		return
 	}
-	
+
 	count = 0
 	for _, host := range c.Hosts {
 		if host.Offline == true {

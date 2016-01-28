@@ -92,7 +92,7 @@ func (w *Workflow) Exec(com Command) (wr WorkflowReturn) {
 			// Comment
 			continue
 		}
-		
+
 		if strings.HasPrefix(c, "SET ") {
 			// SET %varname% "some string"
 			// Handled by Init()
@@ -271,7 +271,7 @@ func (w *Workflow) handleRand(vvalue string) (string, error) {
 func saneMaxLimitFromWorkflow(wf Workflow) int {
 	// We need to count the commands, but factor out "SET" and "#"
 	c := 0
-	for _,command := range wf.Commands {
+	for _, command := range wf.Commands {
 		if strings.HasPrefix(command, "SET ") || strings.HasPrefix(command, "#") {
 			continue
 		}

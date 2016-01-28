@@ -13,7 +13,6 @@ import (
 	"syscall"
 )
 
-
 func getOpenFiles() []string {
 	out, err := exec.Command("/bin/bash", "-c", fmt.Sprintf("lsof -np %v", os.Getpid())).Output()
 	if err != nil {
@@ -32,14 +31,14 @@ func saneMaxLimit(sessionCount int) int {
 
 	of := len(getOpenFiles()) - 1
 	oflimit := int(rLimit.Cur)
-	avail :=  oflimit - of
+	avail := oflimit - of
 
 	if sessionCount < 1 {
 		// Sanity
 		sessionCount = 1
 	}
-	
+
 	Debug.Printf("Open files: %d of %d (%d avail). Session count: %d\n", of, oflimit, avail, sessionCount)
-	
+
 	return avail / (sessionCount * 2)
 }
