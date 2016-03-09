@@ -147,7 +147,7 @@ func (w *Workflow) handleFor(c string, com Command) ([]CommandReturn, error) {
 
 	var crs []CommandReturn
 
-	cparts := strings.Split(c, " ")
+	cparts := strings.Fields(c)
 	if len(cparts) < 3 {
 		// Hmmm, malformated FOR
 		return crs, fmt.Errorf("'FOR list ACTION' statement incomplete: '%s'\n", c)
@@ -197,7 +197,7 @@ func (w *Workflow) handleFor(c string, com Command) ([]CommandReturn, error) {
 
 func (w *Workflow) handleSet(c string) (err error) {
 
-	cparts := strings.Split(c, " ")
+	cparts := strings.Fields(c)
 
 	if len(cparts) < 3 {
 		// Hmmm, malformated SET

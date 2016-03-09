@@ -3,6 +3,7 @@
 package main
 
 import (
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -52,18 +53,13 @@ func (h *Host) If(cond string) bool {
 
 	//Debug.Printf("COND: %s\n",cond)
 
-	// Standardize the ands
-	if strings.Contains(strings.ToLower(cond), " and ") {
-		cond = strings.Replace(cond, " and ", " && ", -1)
-		cond = strings.Replace(cond, " AND ", " && ", -1)
-	}
+	// Standardize the ands and ors
+	rAnd := regexp.MustCompile(`(?i) and `)
+	rOr := regexp.MustCompile(`(?i) or `)
+	cond = rAnd.ReplaceAllString(cond, " && ")
+	cond = rOr.ReplaceAllString(cond, " || ")
 
-	// Standardize the ors
-	if strings.Contains(strings.ToLower(cond), " or ") {
-		cond = strings.Replace(cond, " or ", " || ", -1)
-		cond = strings.Replace(cond, " OR ", " || ", -1)
-	}
-
+	// Parse
 	if strings.Contains(cond, " && ") {
 		return h.And(strings.Split(cond, " && "))
 
@@ -72,7 +68,7 @@ func (h *Host) If(cond string) bool {
 
 	} else {
 		// Single statement
-		parts := strings.Split(cond, " ")
+		parts := strings.Fields(cond)
 
 		//Debug.Printf("\tDoes %s %s %s?\n",parts[0],parts[1],parts[2])
 
