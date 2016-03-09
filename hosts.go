@@ -52,46 +52,24 @@ func (h *Host) If(cond string) bool {
 
 	//Debug.Printf("COND: %s\n",cond)
 
-	if strings.Contains(cond, " and ") {
-		ands := strings.Split(cond, " and ")
-		for _, a := range ands {
-			//Debug.Printf("\tAND: %s\n",a)
-			ret := h.If(a)
-			if ret == false {
-				return false
-			}
-		}
-		return true
-	} else if strings.Contains(cond, " && ") {
-		ands := strings.Split(cond, " && ")
-		for _, a := range ands {
-			//Debug.Printf("\tAND: %s\n",a)
-			ret := h.If(a)
-			if ret == false {
-				return false
-			}
-		}
-		return true
-	} else if strings.Contains(cond, " or ") {
-		ors := strings.Split(cond, " or ")
-		for _, o := range ors {
-			//Debug.Printf("\tOR: %s\n",o)
-			ret := h.If(o)
-			if ret == true {
-				return true
-			}
-		}
-		return false
+	// Standardize the ands
+	if strings.Contains(strings.ToLower(cond), " and ") {
+		cond = strings.Replace(cond, " and ", " && ", -1)
+		cond = strings.Replace(cond, " AND ", " && ", -1)
+	}
+
+	// Standardize the ors
+	if strings.Contains(strings.ToLower(cond), " or ") {
+		cond = strings.Replace(cond, " or ", " || ", -1)
+		cond = strings.Replace(cond, " OR ", " || ", -1)
+	}
+
+	if strings.Contains(cond, " && ") {
+		return h.And(strings.Split(cond, " && "))
+
 	} else if strings.Contains(cond, " || ") {
-		ors := strings.Split(cond, " || ")
-		for _, o := range ors {
-			//Debug.Printf("\tOR: %s\n",o)
-			ret := h.If(o)
-			if ret == true {
-				return true
-			}
-		}
-		return false
+		return h.Or(strings.Split(cond, " || "))
+
 	} else {
 		// Single statement
 		parts := strings.Split(cond, " ")
@@ -143,4 +121,25 @@ func (h *Host) If(cond string) bool {
 			return false
 		}
 	}
+}
+
+func (h *Host) And(conds []string) bool {
+	for _, a := range conds {
+		ret := h.If(a)
+		if ret == false {
+			return false
+		}
+	}
+	return true
+}
+
+func (h *Host) Or(conds []string) bool {
+	for _, o := range conds {
+		//Debug.Printf("\tOR: %s\n",o)
+		ret := h.If(o)
+		if ret == true {
+			return true
+		}
+	}
+	return false
 }

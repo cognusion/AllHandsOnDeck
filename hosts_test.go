@@ -85,6 +85,24 @@ func TestHost_SimpleFilters(t *testing.T) {
 	if andn {
 		t.Error("Tags == NOPE and Address == 1.2.3.4 should be false, but true!")
 	}
+	
+	andp = host1.If("Tags == tag1 && Address == 1.2.3.4")
+	andn = host1.If("Tags == NOPE && Address == 1.2.3.4")
+	if andp == false {
+		t.Error("Tags == tag1 && Address == 1.2.3.4 should be true, but false!")
+	}
+	if andn {
+		t.Error("Tags == NOPE && Address == 1.2.3.4 should be false, but true!")
+	}
+	
+	andp = host1.If("Tags == tag1 AND Address == 1.2.3.4")
+	andn = host1.If("Tags == NOPE AND Address == 1.2.3.4")
+	if andp == false {
+		t.Error("Tags == tag1 AND Address == 1.2.3.4 should be true, but false!")
+	}
+	if andn {
+		t.Error("Tags == NOPE AND Address == 1.2.3.4 should be false, but true!")
+	}
 
 	orp := host1.If("Tags == NOPE or Address == 1.2.3.4")
 	orn := host1.If("Tags == NOPE or Address == NOPE")
