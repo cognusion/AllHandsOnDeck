@@ -4,6 +4,7 @@
 			"name": "prodhost6",
 			"address": "10.0.3.224",
 			"port": 22,
+			"loc": "dc2",
 			"tags": ["azl", "mongo-2.4","prod"]
 		},
 		{
@@ -23,6 +24,7 @@
 			"name": "prodhost9",
 			"address": "10.0.3.198",
 			"port": 22,
+			"loc": "dc3",
 			"tags": ["azl", "prod", "tomcat" ]	
 		}
 	]

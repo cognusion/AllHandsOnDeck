@@ -171,9 +171,9 @@ func main() {
 		if workflow {
 			wfIndex = conf.WorkflowIndex(cmd)
 		}
-		
+
 		filteredHosts := conf.FilteredHostList(filter, wave, wfIndex)
-		
+
 		for _, host := range filteredHosts {
 			fmt.Printf("%s: %s\n", host.Name, host.Address)
 		}
