@@ -254,6 +254,7 @@ func main() {
 
 	} else {
 		// cmd is not a workflow
+		wfIndex = -1
 		if max == 0 {
 			// Autoconfig max execs
 			max = saneMaxLimit(1)
@@ -277,7 +278,7 @@ func main() {
 
 	// Status bar! Hosts * 2 because we have the exec phase,
 	// and then the collection phase
-	fhosts := conf.FilteredHostCount(filter, wave)
+	fhosts := conf.FilteredHostCount(filter, wave, wfIndex)
 	Debug.Printf("FilteredHostCount: %d\n", fhosts)
 	bar := pb.New(fhosts * 2)
 
@@ -308,7 +309,6 @@ func main() {
 
 		// Additionally, if there is a filter on the workflow, check the host against that too.
 		if workflow && conf.Workflows[wfIndex].Filter != "" && host.If(conf.Workflows[wfIndex].Filter) == false {
-			bar.Increment()
 			continue
 		}
 
