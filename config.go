@@ -34,27 +34,26 @@ func (c *Config) WorkflowIndex(workflow string) int {
 }
 
 // Given a filter, count the matching hosts
-func (c *Config) FilteredHostCount(filter string, wave, workflowIndex int) (count int) {
-	if filter == "" && wave == 0 && workflowIndex == -1 {
-		count = len(c.Hosts)
-		return
-	}
-
-	count = 0
+func (c *Config) FilteredHostList(filter string, wave, workflowIndex int) (hosts []Host) {
+	
 	for _, host := range c.Hosts {
+	
 		if host.Offline == true {
+			// Check to see if the host is offline
+			continue
+		} else if wave > 0 && host.Wave != wave {
+			// Check to see if we're using waves, and if this is in it
 			continue
 		} else if filter != "" && host.If(filter) == false {
 			// Check to see if the this host matches our filter
-			continue
-		} else if wave != 0 && host.Wave != wave {
-			// Check to see if we're using waves, and if this is in it
 			continue
 		} else if workflowIndex >= 0 && host.If(c.Workflows[workflowIndex].Filter) == false {
 			// Check to see if we're using workflows, and if this is in it
 			continue
 		}
-		count++
+		
+		// POST: We're interested in this host
+		hosts = append(hosts, host)
 	}
 
 	return

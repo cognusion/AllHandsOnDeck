@@ -167,17 +167,14 @@ func main() {
 		fmt.Println("Config loaded and bootstrapped successfully...")
 		os.Exit(0)
 	} else if listHosts {
-		// List all the configured hosts, and exit
-		for _, host := range conf.Hosts {
-			if host.Offline == true {
-				continue
-			} else if filter != "" && host.If(filter) == false {
-				// Check to see if the this host matches our filter
-				continue
-			} else if wave != 0 && host.Wave != wave {
-				// Check to see if we're using waves, and if this is in it
-				continue
-			}
+		// List all the configured hosts, applying filtering logic, and exit
+		if workflow {
+			wfIndex = conf.WorkflowIndex(cmd)
+		}
+		
+		filteredHosts := conf.FilteredHostList(filter, wave, wfIndex)
+		
+		for _, host := range filteredHosts {
 			fmt.Printf("%s: %s\n", host.Name, host.Address)
 		}
 		os.Exit(0)
@@ -278,39 +275,21 @@ func main() {
 
 	// Status bar! Hosts * 2 because we have the exec phase,
 	// and then the collection phase
-	fhosts := conf.FilteredHostCount(filter, wave, wfIndex)
-	Debug.Printf("FilteredHostCount: %d\n", fhosts)
-	bar := pb.New(fhosts * 2)
+	filteredHosts := conf.FilteredHostList(filter, wave, wfIndex)
+	filteredHostCount := len(filteredHosts)
+
+	Debug.Printf("FilteredHostCount: %d\n", filteredHostCount)
+	bar := pb.New(filteredHostCount * 2)
 
 	if progressBar && logFile != "" {
-		Debug.Printf("BAR: Set to %d\n", fhosts*2)
+		Debug.Printf("BAR: Set to %d\n", filteredHostCount*2)
 		bar.Start()
 	}
 
 	// We've made it through checks and tests.
 	// Let's do this.
 	hostList := make(map[string]bool)
-	for _, host := range conf.Hosts {
-
-		// Check to see if the host is offline
-		if host.Offline == true {
-			continue
-		}
-
-		// Check to see if we're using waves, and if this is in it
-		if wave != 0 && host.Wave != wave {
-			continue
-		}
-
-		// Check to see if the this host matches our filter
-		if filter != "" && host.If(filter) == false {
-			continue
-		}
-
-		// Additionally, if there is a filter on the workflow, check the host against that too.
-		if workflow && conf.Workflows[wfIndex].Filter != "" && host.If(conf.Workflows[wfIndex].Filter) == false {
-			continue
-		}
+	for _, host := range filteredHosts {
 
 		// Add the host to the list, and set its return status to false
 		hostList[host.Name] = false
@@ -365,16 +344,9 @@ func main() {
 	}
 
 	/*
-	 * Post-run, pre-result cleanups
+	 * Post-run
 	 *
 	 */
-	if progressBar {
-		// It's highly likely that we filtered out a bunch of hosts, and
-		// while we incremented the bar as those came along, we still have
-		// the response pass to reconcile
-		Debug.Printf("BAR: Catching up on %d\n", fhosts-len(hostList))
-		bar.Add(fhosts - len(hostList))
-	}
 
 	// We wait for all the goros to finish up
 	for i := 0; i < len(hostList); i++ {
