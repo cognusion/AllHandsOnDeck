@@ -170,6 +170,8 @@ func main() {
 		// List all the configured hosts, applying filtering logic, and exit
 		if workflow {
 			wfIndex = conf.WorkflowIndex(cmd)
+		} else {
+			wfIndex = -1
 		}
 
 		filteredHosts := conf.FilteredHostList(filter, wave, wfIndex)
