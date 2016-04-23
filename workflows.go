@@ -201,7 +201,7 @@ func (w *Workflow) handleSet(c string) (err error) {
 
 	if len(cparts) < 3 {
 		// Hmmm, malformated SET
-		return fmt.Errorf("'SET %varname% \"value\"' statement incomplete: '%s'\n", c)
+		return fmt.Errorf("SET statement incomplete: '%s'\n", c)
 	}
 
 	vname := strings.Trim(cparts[1], "%") // nuke the lead/trail percents from the varname

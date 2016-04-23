@@ -26,7 +26,7 @@ func saneMaxLimit(sessionCount int) int {
 	var rLimit syscall.Rlimit
 	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
 	if err != nil {
-		log.Fatal("Error Getting Rlimit: %v\n", err)
+		log.Fatalf("Error Getting Rlimit: %v\n", err)
 	}
 
 	of := len(getOpenFiles()) - 1
