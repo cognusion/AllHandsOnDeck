@@ -213,8 +213,9 @@ func main() {
 		if err != nil {
 			log.Fatalln("Invalid sleep duration: ", err.Error())
 		}
+		Debug.Printf("Staggering hosts (sleeping) by %s each\n", sleepFor)
 	}
-	
+
 	/*
 	 * We are not allowing multiple keys, or key-per-hosts. If you need to possibly use
 	 * multiple keys, ensure ssh-agent is running and has them added, and execute with
@@ -303,6 +304,7 @@ func main() {
 	// We've made it through checks and tests.
 	// Let's do this.
 	hostList := make(map[string]bool)
+	var hostCount time.Duration = 0
 	for _, host := range filteredHosts {
 
 		// Add the host to the list, and set its return status to false
@@ -329,10 +331,23 @@ func main() {
 
 		com := Command{Host: host, SSHConfig: config, Sudo: sudo}
 
+		var wait time.Duration
+		if sleepFor > 0 && hostCount > 0 {
+			wait = hostCount * sleepFor
+		}
+		hostCount += 1
+
 		if workflow {
 			// Workflow
 			go func() {
 				defer bar.Increment()
+
+				// Sleeeeep
+				Debug.Printf("Sleeping for %s\n", wait)
+				select {
+				case <-time.After(wait):
+				}
+
 				sem.Lock()
 				defer sem.Unlock()
 
@@ -349,15 +364,19 @@ func main() {
 			com.Cmd = cmd
 			go func() {
 				defer bar.Increment()
+
+				// Sleeeeep
+				Debug.Printf("Sleeping for %s\n", wait)
+				select {
+				case <-time.After(wait):
+				}
+
 				sem.Lock()
 				defer sem.Unlock()
 
 				commandResults <- com.Exec()
 			}()
 		}
-		
-		// Sleeeep
-		time.Sleep(sleepFor)
 	}
 
 	/*
