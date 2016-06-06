@@ -52,6 +52,7 @@ func (h *Host) SearchTags(tag string) bool {
 func (h *Host) If(cond string) bool {
 
 	//Debug.Printf("COND: %s\n",cond)
+	if cond == "" { return true }
 
 	// Standardize the ands and ors
 	rAnd := regexp.MustCompile(`(?i) and `)

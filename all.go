@@ -51,10 +51,12 @@ func main() {
 		debugLogFile string
 		progressBar  bool
 		dryrun       bool
+		sleepStr     string
 
-		conf    Config
-		auths   []ssh.AuthMethod
-		wfIndex int
+		conf     Config
+		auths    []ssh.AuthMethod
+		wfIndex  int
+		sleepFor time.Duration
 	)
 
 	// Grab the current username, best we can
@@ -87,6 +89,7 @@ func main() {
 	flag.StringVar(&debugLogFile, "debuglogfile", "", "Output debugs to a logfile, instead of standard error")
 	flag.BoolVar(&progressBar, "bar", true, "If outputting to a logfile, display a progress bar")
 	flag.BoolVar(&dryrun, "dryrun", false, "If you want to go through the motions, but never actually SSH to anything")
+	flag.StringVar(&sleepStr, "sleep", "0ms", "Duration to sleep between host iterations (e.g. 32ms or 1s)")
 	flag.Parse()
 
 	/*
@@ -203,6 +206,15 @@ func main() {
 		log.Fatalln(`format must be one of "text", "json", or "xml"`)
 	}
 
+	// Sleepy?
+	{
+		var err error
+		sleepFor, err = time.ParseDuration(sleepStr)
+		if err != nil {
+			log.Fatalln("Invalid sleep duration: ", err.Error())
+		}
+	}
+	
 	/*
 	 * We are not allowing multiple keys, or key-per-hosts. If you need to possibly use
 	 * multiple keys, ensure ssh-agent is running and has them added, and execute with
@@ -343,6 +355,9 @@ func main() {
 				commandResults <- com.Exec()
 			}()
 		}
+		
+		// Sleeeep
+		time.Sleep(sleepFor)
 	}
 
 	/*
