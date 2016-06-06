@@ -9,7 +9,7 @@ All allows you to execute arbitrary "commands" on hosts. You can also group "com
 "Filters" can be applied to "workflows" and/or specified on the command-line. CLI filters are applied first.
 
 ```bash
-go install github.com/cognusion/AllHandsOnDeck
+go get -d github.com/cognusion/AllHandsOnDeck
 cd $GOPATH/src/github.com/cognusion/AllHandsOnDeck
 go test
 go build -o all
@@ -48,6 +48,8 @@ Usage of ./all:
     	Specify the maximum number of concurent commands to execute. Set to 0 to make a good guess for you (default 0)
   -quiet
     	Suppress most-if-not-all normal output
+  -sleep string
+    	Duration to sleep between host iterations (e.g. 32ms or 1s) (default "0ms")
   -sshagent
     	Connect and use SSH-Agent vs. user key
   -sshkey string
