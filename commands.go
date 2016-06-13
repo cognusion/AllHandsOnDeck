@@ -219,6 +219,7 @@ func (c *Command) Exec() (cr CommandReturn) {
 			cr.Error = err
 			return
 		}
+		defer conn.Close()
 
 		session, _ := conn.NewSession()
 		defer session.Close()

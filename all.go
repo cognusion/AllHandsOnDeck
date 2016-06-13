@@ -82,7 +82,7 @@ func main() {
 	flag.BoolVar(&listHosts, "listhosts", false, "List the hostnames and addresses and exit")
 	flag.BoolVar(&listFlows, "listworkflows", false, "List the workflows and exit")
 	flag.IntVar(&wave, "wave", 0, "Specify which \"wave\" this should be applied to")
-	flag.IntVar(&max, "max", 0, "Specify the maximum number of concurent commands to execute. Set to 0 to make a good guess for you (default 0)")
+	flag.IntVar(&max, "max", 0, "Specify the maximum number of concurrent commands to execute. Set to 0 to make a good guess for you (default 0)")
 	flag.StringVar(&format, "format", "text", "Output format. One of: text, json, or xml")
 	flag.StringVar(&logFile, "logfile", "", "Output to a logfile, instead of standard out (enables progressbar to screen)")
 	flag.StringVar(&errorLogFile, "errorlogfile", "", "Output errors to a logfile, instead of standard error")
