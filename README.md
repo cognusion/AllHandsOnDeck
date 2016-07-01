@@ -296,13 +296,23 @@ Finally, if the name of the host is not ugly, the filter succeeds and this host 
 Workflow Special Commands
 =========================
 
+SLEEP
+-----
+
+    SLEEP duration
+
+Sure, you could waste an SSH connection to have the remote system sleep, but it's probably smarter to just sleep locally a lot of the time. The argument is a Go "duration" ala "1s" or "10m" or "3ms".
+
+```bash
+SLEEP 5s
+```
+
 QUIET
 -----
 
     QUIET command
 
 Sometimes a command's output is inconsequential. Leading it with _QUIET_ will suppress output of that one command when the workflow is post-processing. 
-
 
 FOR
 ---

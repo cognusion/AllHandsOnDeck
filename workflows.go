@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // WorkflowReturn is a structure returned after executing a workflow
@@ -124,6 +125,14 @@ func (w *Workflow) Exec(com Command) (wr WorkflowReturn) {
 			if err != nil {
 				log.Printf("Error during FOR: %s\n", err)
 				return
+			}
+		} else if strings.HasPrefix(c, "SLEEP ") {
+			// SLEEP DURATION
+			c = strings.TrimPrefix(c, "SLEEP ")
+			err := w.handleSleep(c)
+			if err != nil {
+				log.Printf("Error during SLEEP: %s\n", err)
+				// non-fatal
 			}
 		} else {
 			// Regular command
@@ -265,6 +274,17 @@ func (w *Workflow) handleRand(vvalue string) (string, error) {
 		return "", fmt.Errorf("Problem using '%s' as a number\n", rparts[2])
 	}
 	return rparts[1] + randString(n) + rparts[3], nil
+}
+
+func (w *Workflow) handleSleep(vvalue string) error {
+
+	sleepFor, err := time.ParseDuration(vvalue)
+	if err == nil {
+		Debug.Printf("SLEEP for %s\n", vvalue)
+		time.Sleep(sleepFor)
+	}
+	return err
+
 }
 
 // Get a saneMaxLimit, based on the number of commands in the workflow
