@@ -13,6 +13,11 @@ type Config struct {
 	Miscs     []Misc
 }
 
+// Adds a Host to Hosts
+func (c *Config) AddHost(h Host) {
+	c.Hosts = append(c.Hosts, h)
+}
+
 // Merge properly merges the provided Config, into the parent Config
 func (c *Config) Merge(conf Config) {
 	c.Hosts = append(c.Hosts, conf.Hosts...)

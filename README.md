@@ -16,6 +16,10 @@ go build -o all
 
 ./all --help
 Usage of ./all:
+  -awshosts
+    	Get EC2 hosts and tags from AWS API
+  -awsregions string
+    	Comma-delimited list of AWS Regions to check if --awshosts is set
   -bar
     	If outputting to a logfile, display a progress bar (default true)
   -cmd string
@@ -45,7 +49,7 @@ Usage of ./all:
   -logfile string
     	Output to a logfile, instead of standard out (enables progressbar to screen)
   -max int
-    	Specify the maximum number of concurent commands to execute. Set to 0 to make a good guess for you (default 0)
+    	Specify the maximum number of concurrent commands to execute. Set to 0 to make a good guess for you (default 0)
   -quiet
     	Suppress most-if-not-all normal output
   -sleep string
@@ -99,7 +103,7 @@ Host
 ----
 
 Configs can specify hosts which can have:
-* Address - IP address of the host (optional, if Name is a valid hostname)
+* Address - IP address of the host (optional, if Name is a valid DNS hostname)
 * Arch - Architecture of the host (e.g. 'x86_64') (optional)
 * Loc - Location of the system (e.g. 'Denver', or 'Rack 12', or whatever) (optional)
 * Wave - If you want to run commands in waves, you can specify an affinity number >0. May be filtered using --wave CLI param, and/or standard filters (optional)
@@ -107,7 +111,7 @@ Configs can specify hosts which can have:
 * Offline - True if the host is offline and should be skipped, else omitted or false
 * Port - Which port SSH is running on. Defaults to 22.
 * Tags - Array of strings which can be used with filters.
-* User - A specific user to use when SSHing to this host. Overrides --user param.
+* User - A specific user to use when SSHing to this host. Overrides --user param. 
 
 ```json
 {
@@ -128,6 +132,44 @@ Configs can specify hosts which can have:
 	]
 }
 ```
+
+### AWS Notes
+
+If you're using AWS, and use the _--awshosts_ CLI or _useawshosts_ misc, you probably
+don't want to duplicate hosts with the same IP address between your "static" configs, and
+what will be pulled from AWS. 
+
+#### Address
+
+The "address" will be populated from the Private IP Address.
+
+#### Arch
+
+The "arch" will be populated from the Architecture.
+
+#### Loc
+
+The "loc" will be populated from the Availability Zone (e.g. "us-east-1a").
+
+#### Name
+
+The "name" will be populated from the EC2 tag "Name".
+
+#### Offline
+
+Will be _true_ if the instance state is not "running".
+
+#### Port
+
+The "port" will be populated from the EC2 tag "sshport".
+
+#### User
+
+The "user" will be populated from the EC2 tag "sshuser".
+
+#### Tags
+
+The "tags" array will be populated with all of the EC2 tags (EXCEPT as previously noted) in the format of "key|value" unless only the "key" is definied. **Keep this in mind when filtering**!!
 
 Workflow
 --------
@@ -222,6 +264,11 @@ Along with _awsaccess_secretkey_ below, these are used for Amazon Web Services o
 
 Along with _awsaccess_key_ above, these are used for Amazon Web Services operations that need credentials. Currently just creating S3 time-token URLs when using the _S3()_ workflow special command.
 
+### aws_regions
+
+Along with all the other _awsaccess_ bits, this is a comma-delimited list of AWS EC2 Regions
+to act on if either _--awshosts_ or _useawshosts_ are used.
+
 ### debugoutputlog
 
 Specifies where you want debug logging to go if you use _--debug_ (versus stderr).
@@ -292,6 +339,11 @@ If the tag list for the host being inspected contains "noupdate", filtering is a
 Next, if the tag list contains "yum", step 2 is done, otherwise "azl" is looked for. If it too doesn't exist, filtering is aborted and the host is skipped.
 
 Finally, if the name of the host is not ugly, the filter succeeds and this host is added to the list that will get the command or workflow-of-commands executed on it. 
+
+AWS Tags
+--------
+
+The "tags" will be populated with all of the instance tags EXCEPT "Name",  "sshuser", and "sshport" tags in the format of "key|value" unless only the "key" is definied.
 
 Workflow Special Commands
 =========================

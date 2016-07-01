@@ -22,6 +22,7 @@ import (
 	"os/user"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -52,6 +53,8 @@ func main() {
 		progressBar  bool
 		dryrun       bool
 		sleepStr     string
+		awsHosts     bool
+		awsRegions   string
 
 		conf     Config
 		auths    []ssh.AuthMethod
@@ -90,6 +93,8 @@ func main() {
 	flag.BoolVar(&progressBar, "bar", true, "If outputting to a logfile, display a progress bar")
 	flag.BoolVar(&dryrun, "dryrun", false, "If you want to go through the motions, but never actually SSH to anything")
 	flag.StringVar(&sleepStr, "sleep", "0ms", "Duration to sleep between host iterations (e.g. 32ms or 1s)")
+	flag.BoolVar(&awsHosts, "awshosts", false, "Get EC2 hosts and tags from AWS API")
+	flag.StringVar(&awsRegions, "awsregions", "", "Comma-delimited list of AWS Regions to check if --awshosts is set")
 	flag.Parse()
 
 	/*
@@ -154,6 +159,73 @@ func main() {
 	if l, ok := GlobalVars["debugoutputlog"]; ok {
 		debugLogFile = l
 		SetDebug(l)
+	}
+
+	if _, ok := GlobalVars["useawshosts"]; ok && GlobalVars["useawshosts"] == "true" {
+		awsHosts = true
+	}
+
+	if r, ok := GlobalVars["awsregions"]; ok {
+		awsRegions = r
+	}
+
+	/*
+	 * Are we dealing with AWS hosts/tags/regions?
+	 */
+	if awsHosts {
+		var regions []string
+		if awsRegions != "" {
+			// CLI
+			regions = strings.Split(awsRegions, ",")
+		} else if r, ok := GlobalVars["aws_regions"]; ok {
+			// Misc
+			regions = strings.Split(r, ",")
+		} else {
+			// Grab default
+			regions = append(regions, getAwsRegion())
+		}
+
+		// Grab the keys from the environment
+		var aKey, sKey string
+
+		// Access key
+		if k, ok := GlobalVars["awsaccess_key"]; ok {
+			aKey = k
+		} else {
+			aKey = os.Getenv("AWS_ACCESS_KEY_ID")
+		}
+
+		// Secret key
+		if k, ok := GlobalVars["awsaccess_secretkey"]; ok {
+			sKey = k
+		} else {
+			sKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
+		}
+
+		var awsconf Config
+		for _, region := range regions {
+			session := initAWS(region, aKey, sKey)
+			resp, err := getEc2Instances(session)
+
+			if err != nil {
+				// Print the error, cast err to awserr.Error to get the Code and
+				// Message from an error.
+				fmt.Println(err.Error())
+
+			} else {
+				for idx, _ := range resp.Reservations {
+					for _, inst := range resp.Reservations[idx].Instances {
+						if inst.Platform == nil || *inst.Platform != "windows" {
+							// Not Windows, phew
+							awsconf.AddHost(NewHostFromInstance(inst))
+						}
+					}
+				}
+			}
+			// grab all the hosts
+			// populate the Config
+		}
+		conf.Merge(awsconf)
 	}
 
 	/*
