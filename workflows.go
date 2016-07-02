@@ -33,9 +33,13 @@ type Workflow struct {
 // Merge another uninitialized Workflow into this one
 func (w *Workflow) Merge(other *Workflow) {
 
-	// Don't clobber filters, but set it if it's empty
+	// Set filter if it's empty, otherwise AND it if it isn't there already
 	if w.Filter == "" && other.Filter != "" {
 		w.Filter = other.Filter
+	} else if other.Filter != "" {
+		if !strings.Contains(w.Filter, other.Filter) {
+			w.Filter = fmt.Sprintf("%s && %s", w.Filter, other.Filter)
+		}
 	}
 
 	// Sudo if we need it
@@ -256,7 +260,7 @@ func (w *Workflow) handleSet(c string) (err error) {
 		// already set, proceed but alert
 		Debug.Printf("SET %s already set to '%s', now '%s'\n", vname, w.vars[vname], vvalue)
 	}
-	
+
 	if err == nil {
 		w.vars[vname] = vvalue
 	}

@@ -280,7 +280,12 @@ func main() {
 	} else if listFlows {
 		// List all the configured workflows, and exit
 		for _, flow := range conf.Workflows {
-			fmt.Printf("%s\n", flow.Name)
+			if debug {
+				flow.Init()
+				fmt.Printf("%s\n%#v\n\n", flow.Name, flow)
+			} else {
+				fmt.Printf("%s\n", flow.Name)
+			}
 		}
 		os.Exit(0)
 	}
