@@ -239,14 +239,10 @@ func (w *Workflow) handleSet(c string) (err error) {
 
 	vname := strings.Trim(cparts[1], "%") // nuke the lead/trail percents from the varname
 
-	if _, ok := w.vars[vname]; ok {
-		// already set, bail
-		return
-	}
-
 	vvalue := strings.Join(cparts[2:len(cparts)], " ") // concatenate any end parts
 	vvalue = strings.Trim(vvalue, "\"")                // nuke lead/trail dub-quotes
 	vvalue = strings.Trim(vvalue, "'")                 // nuke lead/trail sing-quotes
+	vvalue = w.varParse(vvalue)                        // Check it for vars
 
 	if strings.Contains(vvalue, "S3(") {
 		// We need a tokened S3 URL
@@ -256,11 +252,16 @@ func (w *Workflow) handleSet(c string) (err error) {
 		vvalue, err = w.handleRand(vvalue)
 	}
 
+	if _, ok := w.vars[vname]; ok {
+		// already set, proceed but alert
+		Debug.Printf("SET %s already set to '%s', now '%s'\n", vname, w.vars[vname], vvalue)
+	}
+	
 	if err == nil {
 		w.vars[vname] = vvalue
 	}
 
-	return nil
+	return
 }
 
 func (w *Workflow) handleS3(vvalue, accessKey, secretKey string) (string, error) {
