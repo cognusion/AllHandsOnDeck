@@ -30,6 +30,30 @@ type Workflow struct {
 	vars          map[string]string
 }
 
+// Merge another uninitialized Workflow into this one
+func (w *Workflow) Merge(other *Workflow) {
+
+	// Don't clobber filters, but set it if it's empty
+	if w.Filter == "" && other.Filter != "" {
+		w.Filter = other.Filter
+	}
+
+	// Sudo if we need it
+	if other.Sudo {
+		w.Sudo = true
+	}
+
+	// Ensure the max min
+	if other.MinTimeout > w.MinTimeout {
+		w.MinTimeout = other.MinTimeout
+	}
+
+	// Append all the arrays
+	w.Commands = append(w.Commands, other.Commands...)
+	w.CommandBreaks = append(w.CommandBreaks, other.CommandBreaks...)
+
+}
+
 func (w *Workflow) varParse(s string) string {
 
 	// First check the global list

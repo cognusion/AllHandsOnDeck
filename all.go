@@ -66,8 +66,8 @@ func main() {
 	currentUser, _ := user.Current()
 
 	// Channels for command and workflow -results
-	commandResults := make(chan CommandReturn, 10)
-	wfResults := make(chan WorkflowReturn, 10)
+	commandResults := make(chan CommandReturn, 100)
+	wfResults := make(chan WorkflowReturn, 100)
 
 	flag.BoolVar(&sshAgent, "sshagent", false, "Connect and use SSH-Agent vs. user key")
 	flag.StringVar(&sshKey, "sshkey", currentUser.HomeDir+"/.ssh/id_rsa", "If not using the SSH-Agent, where to grab the key")
@@ -226,6 +226,28 @@ func main() {
 			// populate the Config
 		}
 		conf.Merge(awsconf)
+	}
+
+	/*
+	 * If we have a workflow,
+	 * and cmd is a list,
+	 * we handle that here
+	 */
+	if workflow && strings.Contains(cmd, ",") {
+		newFlow := Workflow{
+			Name: cmd,
+		}
+
+		for _, c := range strings.Split(cmd, ",") {
+			wfi := conf.WorkflowIndex(c)
+			if wfi < 0 {
+				log.Fatalf("Workflow '%s' in chain does not exist in specified configs!\n", c)
+			}
+			newFlow.Merge(&conf.Workflows[wfi])
+		}
+
+		conf.Workflows = append(conf.Workflows, newFlow)
+
 	}
 
 	/*
