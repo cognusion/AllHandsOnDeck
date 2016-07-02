@@ -1,5 +1,5 @@
 # AllHandsOnDeck
-All Hands On Deck (aka "all") is a simple agentless orchestration system written in Go, for Linux. You can run it *from* any platform that supports Go (Macs are popular, I hear). Commands are executed in parallelish, as are workflows (commands within a workflow are executed serially);
+All Hands On Deck (aka "all") is a simple agentless orchestration system written in Go, for Linux. You can run it *from* any platform that supports Go (Macs are popular, I hear). Commands are executed via SSH in parallelish, as are workflows (commands within a workflow are executed serially);
 
 Basics
 ======
@@ -97,21 +97,23 @@ So how would you tag your hosts? There aren't any hosts listed on that command u
 
 All reads all of the .json files in the --configs folder (defaults to "configs/" for convenience). Host and Workflow config stanzas may be smattered about, and will all get merged together when All reads them. 
 
+Additionally, if you use Amazon Web Services EC2, you can use the live inventory via their API: Just need your keys.
+
 Some utilities like giving configs fancy names like "recipes" or "playbooks" so they seem like more than they are. I don't. These configs are still fancy, though.
 
 Host
 ----
 
 Configs can specify hosts which can have:
-* Address - IP address of the host (optional, if Name is a valid DNS hostname)
-* Arch - Architecture of the host (e.g. 'x86_64') (optional)
-* Loc - Location of the system (e.g. 'Denver', or 'Rack 12', or whatever) (optional)
-* Wave - If you want to run commands in waves, you can specify an affinity number >0. May be filtered using --wave CLI param, and/or standard filters (optional)
-* Name - Name of the host. If it's a valid DNS hostname, Address may be omitted
-* Offline - True if the host is offline and should be skipped, else omitted or false
-* Port - Which port SSH is running on. Defaults to 22.
-* Tags - Array of strings which can be used with filters.
-* User - A specific user to use when SSHing to this host. Overrides --user param. 
+* Address - IP address of the host (optional, if Name is a valid DNS hostname) (AWS: Private IP Address)
+* Arch - Architecture of the host (e.g. 'x86_64') (optional) (AWS: Architecture)
+* Loc - Location of the system (e.g. 'Denver', or 'Rack 12', or whatever) (optional) (AWS: Availability Zone)
+* Wave - If you want to run commands in waves, you can specify an affinity number >0. May be filtered using --wave CLI param, and/or standard filters (optional) (AWS: Value of EC2 tag "wave")
+* Name - Name of the host. If it's a valid DNS hostname, Address may be omitted (AWS: Value of EC2 tag "Name")
+* Offline - True if the host is offline and should be skipped, else omitted or false (AWS: True if the state is not "running")
+* Port - Which port SSH is running on. Defaults to 22. (AWS: Value of EC2 tag "sshport")
+* Tags - Array of strings which can be used with filters. (AWS: See note about AWS Tags below)
+* User - A specific user to use when SSHing to this host. Overrides --user param.  (AWS: Value of EC2 tag "sshuser")
 
 ```json
 {
@@ -133,43 +135,9 @@ Configs can specify hosts which can have:
 }
 ```
 
-### AWS Notes
+### AWS Tags
 
-If you're using AWS, and use the _--awshosts_ CLI or _useawshosts_ misc, you probably
-don't want to duplicate hosts with the same IP address between your "static" configs, and
-what will be pulled from AWS. 
-
-#### Address
-
-The "address" will be populated from the Private IP Address.
-
-#### Arch
-
-The "arch" will be populated from the Architecture.
-
-#### Loc
-
-The "loc" will be populated from the Availability Zone (e.g. "us-east-1a").
-
-#### Name
-
-The "name" will be populated from the EC2 tag "Name".
-
-#### Offline
-
-Will be _true_ if the instance state is not "running".
-
-#### Port
-
-The "port" will be populated from the EC2 tag "sshport".
-
-#### User
-
-The "user" will be populated from the EC2 tag "sshuser".
-
-#### Tags
-
-The "tags" array will be populated with all of the EC2 tags (EXCEPT as previously noted) in the format of "key|value" unless only the "key" is definied. **Keep this in mind when filtering**!!
+The "tags" array will be populated with all of the EC2 tags (EXCEPT the ones previously noted that are used to fill in other fields) in the format of "key|value" unless only the "key" is defined, then it will just be "key". **Keep this in mind when filtering**!!
 
 Workflow
 --------
@@ -241,6 +209,10 @@ Some things are clunky on the CLI, or shouldn't be passed that way, or we're sim
 			"value": "123456789"
 		},
 		{
+			"name": "useawshosts",
+			"value": "true"
+		},
+		{
 			"name": "dontrestart-processes",
 			"value": "udevd,mongod,tomcat,java,dirsrv,ns-slapd"
 		},
@@ -267,7 +239,13 @@ Along with _awsaccess_key_ above, these are used for Amazon Web Services operati
 ### aws_regions
 
 Along with all the other _awsaccess_ bits, this is a comma-delimited list of AWS EC2 Regions
-to act on if either _--awshosts_ or _useawshosts_ are used.
+to act on if either _--awshosts_ or _useawshosts_ are used. This is the equivalient of _--awsregions_.
+```json
+	{
+		"name": "aws_regions",
+		"value": "us-west-1,eu-central-1"
+	}
+```
 
 ### debugoutputlog
 
@@ -313,6 +291,17 @@ Values are text, json, or xml.
 
 Specifies where you want regular output to go (versus stdout).
 
+### useawshosts
+
+If you always want to use the AWS EC2 inventory, set this instead:
+```json
+	{
+		"name": "useawshosts",
+		"value": "true"
+	}
+```
+
+
 ### usesshagent
 
 If you always want to use an SSH agent, it's obnoxious to specify it on the CLI all the time. Set this instead:
@@ -343,7 +332,7 @@ Finally, if the name of the host is not ugly, the filter succeeds and this host 
 AWS Tags
 --------
 
-The "tags" will be populated with all of the instance tags EXCEPT "Name",  "sshuser", and "sshport" tags in the format of "key|value" unless only the "key" is definied.
+The "tags" array will be populated with all of the EC2 tags (EXCEPT the ones previously noted that are used to fill in other fields) in the format of "key|value" unless only the "key" is defined, then it will just be "key". **Keep this in mind when filtering**!!
 
 Workflow Special Commands
 =========================
