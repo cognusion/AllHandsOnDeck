@@ -235,7 +235,8 @@ func main() {
 	 */
 	if workflow && strings.Contains(cmd, ",") {
 		newFlow := Workflow{
-			Name: cmd,
+			Name:      cmd,
+			MustChain: false,
 		}
 
 		for _, c := range strings.Split(cmd, ",") {

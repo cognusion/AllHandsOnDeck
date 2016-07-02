@@ -25,6 +25,7 @@ type Workflow struct {
 	Name          string
 	Sudo          bool
 	MinTimeout    int
+	MustChain     bool
 	Commands      []string
 	CommandBreaks []bool
 	vars          map[string]string
@@ -106,6 +107,10 @@ func (w *Workflow) Exec(com Command) (wr WorkflowReturn) {
 		Name:      w.Name,
 		HostObj:   com.Host,
 		Completed: false,
+	}
+
+	if w.MustChain {
+		log.Fatalf("Workflow %s must be used in a chain!\n", w.Name)
 	}
 
 	Debug.Printf("Executing workflow %s\n", w.Name)
