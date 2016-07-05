@@ -349,11 +349,14 @@ func main() {
 	// If cmd is a workflow
 	//  - ensure the workflow exists
 	//  - cache the location of the specified workflow
+	//  - ensure we're not executing a must-chain flow
 	//  - Do The Right Thing
 	if workflow {
 		wfIndex = conf.WorkflowIndex(cmd)
 		if wfIndex < 0 {
 			log.Fatalf("Workflow '%s' does not exist in specified configs!\n", cmd)
+		} else if conf.Workflows[wfIndex].MustChain {
+			log.Fatalf("Workflow '%s' must be used in a chain!\n", cmd)
 		}
 
 		if max == 0 {

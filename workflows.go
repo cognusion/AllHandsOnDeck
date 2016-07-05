@@ -109,10 +109,6 @@ func (w *Workflow) Exec(com Command) (wr WorkflowReturn) {
 		Completed: false,
 	}
 
-	if w.MustChain {
-		log.Fatalf("Workflow %s must be used in a chain!\n", w.Name)
-	}
-
 	Debug.Printf("Executing workflow %s\n", w.Name)
 
 	// Per-wf override for sudo

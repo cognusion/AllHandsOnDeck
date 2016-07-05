@@ -48,8 +48,8 @@ func TestAll_WorkflowIndex(t *testing.T) {
 	var conf Config
 	conf = loadConfigFile("testconfigs/testflows.json", conf)
 
-	if len(conf.Workflows) != 4 {
-		t.Error("Expected 4 workflows, got ", len(conf.Workflows))
+	if len(conf.Workflows) != 5 {
+		t.Error("Expected 5 workflows, got ", len(conf.Workflows))
 	}
 
 	if conf.WorkflowIndex("restart-tomcat") < 0 {
@@ -59,4 +59,18 @@ func TestAll_WorkflowIndex(t *testing.T) {
 	if conf.WorkflowIndex("NOPE") >= 0 {
 		t.Error("Unexpectedly found workflow 'NOPE'")
 	}
+}
+
+func TestAll_WorkflowChain(t *testing.T) {
+	var conf Config
+	conf = loadConfigFile("testconfigs/testflows.json", conf)
+	
+	// TODO: test chaining workflows
+}
+
+func TestAll_WorkflowMustChain(t *testing.T) {
+	var conf Config
+	conf = loadConfigFile("testconfigs/testflows.json", conf)
+	
+	// TODO: test chaining workflows with and without MustChain
 }

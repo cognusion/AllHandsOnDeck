@@ -38,6 +38,13 @@
 			"commands": [
 				"FOR needs-restarting RESTART"
 			]
+		},
+		{
+			"name": "must-chain-this",
+			"MustChain": true,
+			"commands": [
+				"# A comment, is all"
+			]
 		}
 	]	
 }
