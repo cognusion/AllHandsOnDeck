@@ -165,7 +165,7 @@ func main() {
 		awsHosts = true
 	}
 
-	if r, ok := GlobalVars["awsregions"]; ok {
+	if r, ok := GlobalVars["awsregions"]; ok && awsRegions == "" {
 		awsRegions = r
 	}
 
