@@ -327,7 +327,9 @@ If the tag list for the host being inspected contains "noupdate", filtering is a
 
 Next, if the tag list contains "yum", step 2 is done, otherwise "azl" is looked for. If it too doesn't exist, filtering is aborted and the host is skipped.
 
-Finally, if the name of the host is not ugly, the filter succeeds and this host is added to the list that will get the command or workflow-of-commands executed on it. 
+Finally, if the name of the host is not ugly, the filter succeeds and this host is added to the list that will get the command or workflow-of-commands executed on it.
+
+Since v2.1, filters also support limited fuzzy matching via _~=_ ("kinda equal") and _~!_ ("kinda not") operators. **Currently, it is a simple substring match, but may evolve in the future.**
 
 AWS Tags
 --------
@@ -460,6 +462,18 @@ All builds on Windows platforms, however there are some quirks:
 * Windows builds aren't generally tested beyond assuring they build clean
 * The _maxexecs_ autodetection is completely unavailable, and set to _GOMAXPROCS_ if 
 autodetection is requested
+
+## AWS EC2 "Waves"
+
+The "wave" facility is nice if you want explict control of which set of hosts is being impacted, however in AWS EC2, assuming you're doing it right, you can use Availability Zones (which are populated into the _Loc_ Host field) in lieu of waves:
+
+```bash
+all --filter "Loc == us-east-1a" ...
+all --filter "Loc == us-east-1b" ...
+
+ # Hit an entire Region (note the tilde operator)
+all --filter "Loc ~= us-west-2" ...
+```
 
 
 Forward, Ho

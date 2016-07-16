@@ -30,9 +30,11 @@ func (h *Host) SortTags() {
 }
 
 // SearchTags iterates over the Tags array and return true/false if the requested tag is found
-func (h *Host) SearchTags(tag string) bool {
+func (h *Host) SearchTags(tag string, fuzzy bool) bool {
 	for _, t := range h.Tags {
-		if t == tag {
+		if !fuzzy && t == tag {
+			return true
+		} else if fuzzy && strings.Contains(t, tag) {
 			return true
 		}
 	}
@@ -52,7 +54,9 @@ func (h *Host) SearchTags(tag string) bool {
 func (h *Host) If(cond string) bool {
 
 	//Debug.Printf("COND: %s\n",cond)
-	if cond == "" { return true }
+	if cond == "" {
+		return true
+	}
 
 	// Standardize the ands and ors
 	rAnd := regexp.MustCompile(`(?i) and `)
@@ -71,15 +75,33 @@ func (h *Host) If(cond string) bool {
 		// Single statement
 		parts := strings.Fields(cond)
 
-		//Debug.Printf("\tDoes %s %s %s?\n",parts[0],parts[1],parts[2])
+		if len(parts) != 3 {
+			Debug.Printf("Statement syntax invalid! '%s'\n", cond)
+			return false
+		}
+
+		field, op, val := parts[0], parts[1], parts[2]
+		fuzzy := false
+
+		// Check for operator existance
+		switch op {
+		case "==":
+		case "!=":
+		case "~!":
+			fuzzy = true
+		case "~=":
+			fuzzy = true
+		default:
+			Debug.Printf("Operator '%s' does not exist!\n", op)
+		}
 
 		// Case/swtich to check each of the fields
 		found := false
-		switch parts[0] {
+		switch field {
 		case "Tags":
-			found = h.SearchTags(parts[2])
+			found = h.SearchTags(val, fuzzy)
 		case "Port":
-			fport, _ := strconv.Atoi(parts[2])
+			fport, _ := strconv.Atoi(val)
 			if h.Port != 0 {
 				found = h.Port == fport
 			} else {
@@ -87,34 +109,55 @@ func (h *Host) If(cond string) bool {
 				found = 22 == fport
 			}
 		case "Wave":
-			fwave, _ := strconv.Atoi(parts[2])
+			fwave, _ := strconv.Atoi(val)
 			if h.Wave != 0 {
 				found = h.Wave == fwave
 			}
 		case "Address":
-			found = h.Address == parts[2]
+			if fuzzy {
+				found = strings.Contains(h.Address, val)
+			} else {
+				found = h.Address == val
+			}
 		case "Loc":
-			found = h.Loc == parts[2]
+			if fuzzy {
+				found = strings.Contains(h.Loc, val)
+			} else {
+				found = h.Loc == val
+			}
 		case "Name":
-			found = h.Name == parts[2]
+			if fuzzy {
+				found = strings.Contains(h.Name, val)
+			} else {
+				found = h.Name == val
+			}
 		case "Arch":
-			found = h.Arch == parts[2]
+			if fuzzy {
+				found = strings.Contains(h.Arch, val)
+			} else {
+				found = h.Arch == val
+			}
 		case "User":
 			// caveat: We don't have access to the CLI-specified user,
 			// so this only matches a host-specified user
-			found = h.User == parts[2]
+			if fuzzy {
+				found = strings.Contains(h.User, val)
+			} else {
+				found = h.User == val
+			}
 		default:
 			// Hmmm...
-			Debug.Printf("Conditional name '%s' does not exist!\n", parts[0])
+			Debug.Printf("Conditional name '%s' does not exist!\n", field)
 			return false
 		}
 
 		// Case/switch to check each operator
-		if parts[1] == "==" && found {
+		if found && (op == "==" || op == "~=") {
 			return true
-		} else if parts[1] == "!=" && found == false {
+		} else if !found && (op == "!=" || op == "~!") {
 			return true
 		} else {
+			// Fail safe
 			return false
 		}
 	}

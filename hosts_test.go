@@ -13,7 +13,7 @@ var host1 *Host = &Host{
 	Wave:    1,
 	Offline: false,
 	Port:    22,
-	Tags:    []string{"tag3", "tag2", "tag1", "tag4"},
+	Tags:    []string{"tag3", "tag2", "tag1", "tag4", "NOPEFUZZY"},
 	User:    "auser",
 }
 
@@ -40,12 +40,22 @@ func TestHost_TagSort(t *testing.T) {
 }
 
 func TestHost_TagSearch(t *testing.T) {
-	if host1.SearchTags("tag2") == false {
+	if host1.SearchTags("tag2", false) == false {
 		t.Error("Expecting to find tag2, but didn't: ", host1.Tags)
 	}
 
-	if host1.SearchTags("NOPE") {
+	if host1.SearchTags("NOPE", false) {
 		t.Error("Not expecting to find NOPE, but did: ", host1.Tags)
+	}
+}
+
+func TestHost_TagSearchFuzzy(t *testing.T) {
+	if host1.SearchTags("tag2", true) == false {
+		t.Error("Expecting to find tag2, but didn't: ", host1.Tags)
+	}
+
+	if host1.SearchTags("NOPE", true) == false {
+		t.Error("Expecting to find fuzzy NOPE, but didn't: ", host1.Tags)
 	}
 }
 
@@ -85,7 +95,7 @@ func TestHost_SimpleFilters(t *testing.T) {
 	if andn {
 		t.Error("Tags == NOPE and Address == 1.2.3.4 should be false, but true!")
 	}
-	
+
 	andp = host1.If("Tags == tag1 && Address == 1.2.3.4")
 	andn = host1.If("Tags == NOPE && Address == 1.2.3.4")
 	if andp == false {
@@ -94,7 +104,7 @@ func TestHost_SimpleFilters(t *testing.T) {
 	if andn {
 		t.Error("Tags == NOPE && Address == 1.2.3.4 should be false, but true!")
 	}
-	
+
 	andp = host1.If("Tags == tag1 AND Address == 1.2.3.4")
 	andn = host1.If("Tags == NOPE AND Address == 1.2.3.4")
 	if andp == false {
