@@ -393,16 +393,16 @@ func main() {
 		GlobalVars["dryrun"] = "yup"
 	}
 
-	// Status bar! Hosts * 2 because we have the exec phase,
+	// Status bar!
 	// and then the collection phase
 	filteredHosts := conf.FilteredHostList(filter, wave, wfIndex)
 	filteredHostCount := len(filteredHosts)
 
 	Debug.Printf("FilteredHostCount: %d\n", filteredHostCount)
-	bar := pb.New(filteredHostCount * 2)
+	bar := pb.New(filteredHostCount)
 
 	if progressBar && logFile != "" {
-		Debug.Printf("BAR: Set to %d\n", filteredHostCount*2)
+		Debug.Printf("BAR: Set to %d\n", filteredHostCount)
 		bar.Start()
 	}
 
@@ -496,7 +496,6 @@ func main() {
 			select {
 			case res := <-wfResults:
 				hostList[res.HostObj.Name] = true // returned is good enough for this
-				bar.Increment()
 
 				if res.Completed == false {
 					Error.Printf("Workflow %s did not fully complete\n", res.Name)
@@ -527,7 +526,6 @@ func main() {
 				for h, v := range hostList {
 					if v == false {
 						badHosts = append(badHosts, h)
-						bar.Increment()
 					}
 				}
 				Error.Printf("Workflow operation timed out! The following hosts haven't returned: %s\n", badHosts)
@@ -538,7 +536,6 @@ func main() {
 			select {
 			case res := <-commandResults:
 				hostList[res.HostObj.Name] = true // returned is good enough for this
-				bar.Increment()
 
 				if quiet == false && res.Quiet == false {
 					switch format {
@@ -557,7 +554,6 @@ func main() {
 				for h, v := range hostList {
 					if v == false {
 						badHosts = append(badHosts, h)
-						bar.Increment()
 					}
 				}
 				Error.Printf("Command operation timed out! The following hosts haven't returned: %s\n", badHosts)
