@@ -76,7 +76,7 @@ func (h *Host) If(cond string) bool {
 		parts := strings.Fields(cond)
 
 		if len(parts) != 3 {
-			Debug.Printf("Statement syntax invalid! '%s'\n", cond)
+			Error.Printf("Statement syntax invalid! '%s'\n", cond)
 			return false
 		}
 
@@ -92,7 +92,8 @@ func (h *Host) If(cond string) bool {
 		case "~=":
 			fuzzy = true
 		default:
-			Debug.Printf("Operator '%s' does not exist!\n", op)
+			Error.Printf("Operator '%s' does not exist!\n", op)
+			return false
 		}
 
 		// Case/swtich to check each of the fields
@@ -147,7 +148,7 @@ func (h *Host) If(cond string) bool {
 			}
 		default:
 			// Hmmm...
-			Debug.Printf("Conditional name '%s' does not exist!\n", field)
+			Error.Printf("Conditional name '%s' does not exist!\n", field)
 			return false
 		}
 
