@@ -104,7 +104,7 @@ func main() {
 	if debug {
 		SetDebug(debugLogFile)
 	}
-	if logFile != "" {
+	if logFile != "" && logFile != "STDOUT" {
 		SetLog(logFile)
 	}
 	if errorLogFile != "" {
@@ -156,12 +156,16 @@ func main() {
 	}
 
 	if f, ok := GlobalVars["outputformat"]; ok {
-		format = f
+		if logFile != "STDOUT" {
+			format = f
+		}
 	}
 
 	if l, ok := GlobalVars["outputlog"]; ok {
-		logFile = l
-		SetLog(l)
+		if logFile != "STDOUT" {
+			logFile = l
+			SetLog(l)
+		}
 	}
 
 	if l, ok := GlobalVars["erroroutputlog"]; ok {
