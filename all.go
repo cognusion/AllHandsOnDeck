@@ -55,6 +55,7 @@ func main() {
 		sleepStr     string
 		awsHosts     bool
 		awsRegions   string
+		cliVars      string
 
 		conf     Config
 		auths    []ssh.AuthMethod
@@ -95,6 +96,7 @@ func main() {
 	flag.StringVar(&sleepStr, "sleep", "0ms", "Duration to sleep between host iterations (e.g. 32ms or 1s)")
 	flag.BoolVar(&awsHosts, "awshosts", false, "Get EC2 hosts and tags from AWS API")
 	flag.StringVar(&awsRegions, "awsregions", "", "Comma-delimited list of AWS Regions to check if --awshosts is set")
+	flag.StringVar(&cliVars, "vars", "", "Comma-delimited list of variables to pass in for use in workflows, sometimes")
 	flag.Parse()
 
 	/*
@@ -322,6 +324,14 @@ func main() {
 		Debug.Printf("Staggering hosts (sleeping) by %s each\n", sleepFor)
 	}
 
+	// cliVars splitting
+	if cliVars != "" {
+		// CLI
+		for c, v := range strings.Split(cliVars, ",") {
+			GlobalVars[fmt.Sprintf("VAR%d", c+1)] = v
+		}
+	}
+
 	/*
 	 * We are not allowing multiple keys, or key-per-hosts. If you need to possibly use
 	 * multiple keys, ensure ssh-agent is running and has them added, and execute with
@@ -356,13 +366,24 @@ func main() {
 	//  - ensure the workflow exists
 	//  - cache the location of the specified workflow
 	//  - ensure we're not executing a must-chain flow
+	//  - ensure any required vars exist
 	//  - Do The Right Thing
 	if workflow {
 		wfIndex = conf.WorkflowIndex(cmd)
 		if wfIndex < 0 {
+			// Does it exist?
 			log.Fatalf("Workflow '%s' does not exist in specified configs!\n", cmd)
 		} else if conf.Workflows[wfIndex].MustChain {
+			// Must we chain it?
 			log.Fatalf("Workflow '%s' must be used in a chain!\n", cmd)
+		} else {
+			// Are all the required CLI vars set?
+			req := conf.Workflows[wfIndex].VarsRequired
+			for _, r := range req {
+				if _, ok := GlobalVars[r]; !ok {
+					log.Fatalf("Workflow '%s' requires unset CLI var '%s'!\n", cmd, r)
+				}
+			}
 		}
 
 		if max == 0 {

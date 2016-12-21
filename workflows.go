@@ -28,6 +28,7 @@ type Workflow struct {
 	MustChain     bool
 	Commands      []string
 	CommandBreaks []bool
+	VarsRequired  []string
 	vars          map[string]string
 }
 
@@ -56,6 +57,7 @@ func (w *Workflow) Merge(other *Workflow) {
 	// Append all the arrays
 	w.Commands = append(w.Commands, other.Commands...)
 	w.CommandBreaks = append(w.CommandBreaks, other.CommandBreaks...)
+	w.VarsRequired = append(w.VarsRequired, other.VarsRequired...)
 
 }
 
