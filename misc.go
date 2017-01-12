@@ -64,6 +64,11 @@ func needsRestartingMangler(plist, drList []string) (initList []string) {
 				cmd = cmds[len(cmds)-1]
 			}
 
+			// Skip bracketted processes
+			if strings.HasPrefix(cmd, "(") || strings.HasPrefix(cmd, "[") {
+				continue
+			}
+
 			// Clean up control names
 			cmd = strings.TrimSuffix(cmd, ":")
 

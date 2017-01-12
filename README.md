@@ -34,6 +34,8 @@ Usage of ./all:
     	Enable Debug output
   -debuglogfile string
     	Output debugs to a logfile, instead of standard error
+  -dnf
+    	Use dnf instead of yum for some commands
   -dryrun
     	If you want to go through the motions, but never actually SSH to anything
   -errorlogfile string
@@ -63,11 +65,14 @@ Usage of ./all:
   -timeout int
     	Seconds before the entire operation times out (default 60)
   -user string
-    	User to run as (default "user")
+    	User to run as (default "yourusername")
+  -vars string
+    	Comma-delimited list of variables to pass in for use in workflows, sometimes
   -wave int
     	Specify which "wave" this should be applied to
   -workflow
     	The --cmd is a workflow
+
 ```
 
 At it's simplest, All will execute the specified command on all your hosts, via your SSH key.
@@ -308,6 +313,15 @@ If you always want to use an SSH agent, it's obnoxious to specify it on the CLI 
 ```json
 	{
 		"name": "usesshagent",
+		"value": "true"
+	}
+```
+
+### usednf
+If you always want to use dnf instead of yum, it's obnoxious to specify it on the CLI all the time. Set this instead:
+```json
+	{
+		"name": "usednf",
 		"value": "true"
 	}
 ```

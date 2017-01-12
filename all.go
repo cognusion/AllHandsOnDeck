@@ -56,6 +56,7 @@ func main() {
 		awsHosts     bool
 		awsRegions   string
 		cliVars      string
+		dnf          bool
 
 		conf     Config
 		auths    []ssh.AuthMethod
@@ -97,6 +98,7 @@ func main() {
 	flag.BoolVar(&awsHosts, "awshosts", false, "Get EC2 hosts and tags from AWS API")
 	flag.StringVar(&awsRegions, "awsregions", "", "Comma-delimited list of AWS Regions to check if --awshosts is set")
 	flag.StringVar(&cliVars, "vars", "", "Comma-delimited list of variables to pass in for use in workflows, sometimes")
+	flag.BoolVar(&dnf, "dnf", false, "Use dnf instead of yum for some commands")
 	flag.Parse()
 
 	/*
@@ -186,6 +188,10 @@ func main() {
 
 	if r, ok := GlobalVars["awsregions"]; ok && awsRegions == "" {
 		awsRegions = r
+	}
+
+	if _, ok := GlobalVars["usednf"]; ok && GlobalVars["usednf"] == "true" {
+		dnf = true
 	}
 
 	/*
@@ -392,6 +398,7 @@ func main() {
 		}
 
 		// Init the workflow
+		conf.Workflows[wfIndex].Dnf = dnf
 		conf.Workflows[wfIndex].Init()
 
 	} else {

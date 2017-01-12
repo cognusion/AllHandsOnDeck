@@ -26,6 +26,7 @@ type Workflow struct {
 	Sudo          bool
 	MinTimeout    int
 	MustChain     bool
+	Dnf           bool
 	Commands      []string
 	CommandBreaks []bool
 	VarsRequired  []string
@@ -47,6 +48,11 @@ func (w *Workflow) Merge(other *Workflow) {
 	// Sudo if we need it
 	if other.Sudo {
 		w.Sudo = true
+	}
+
+	// Dnf if we need it
+	if other.Dnf {
+		w.Dnf = true
 	}
 
 	// Ensure the max min
@@ -198,7 +204,12 @@ func (w *Workflow) handleFor(c string, com Command) ([]CommandReturn, error) {
 	// Set up our list
 	if cparts[1] == "needs-restarting" {
 		// Do that voodoo that you do, for special command "needs-restarting"
-		com.Cmd = cparts[1]
+		if w.Dnf {
+			com.Cmd = "dnf needs-restarting"
+		} else {
+			com.Cmd = "needs-restarting"
+		}
+
 		listRes := com.Exec()
 		crs = append(crs, listRes)
 		if listRes.Error != nil {
