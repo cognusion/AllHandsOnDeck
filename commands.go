@@ -185,7 +185,7 @@ func (c *Command) Exec() (cr CommandReturn) {
 
 	// Do we need to prepend sudo?
 	if c.Sudo {
-		cmd = "sudo " + cmd
+		cmd = "sudo \"" + cmd + "\""
 	}
 
 	Debug.Printf("Executing command '%s'\n", cmd)
