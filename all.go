@@ -238,7 +238,7 @@ func main() {
 				fmt.Println(err.Error())
 
 			} else {
-				for idx, _ := range resp.Reservations {
+				for idx := range resp.Reservations {
 					for _, inst := range resp.Reservations[idx].Instances {
 						if inst.Platform == nil || *inst.Platform != "windows" {
 							// Not Windows, phew
@@ -456,8 +456,9 @@ func main() {
 
 		// SSH Config
 		config := &ssh.ClientConfig{
-			User: configUser,
-			Auth: auths,
+			User:            configUser,
+			Auth:            auths,
+			HostKeyCallback: nil,
 		}
 
 		/*
