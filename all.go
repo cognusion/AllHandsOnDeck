@@ -240,6 +240,10 @@ func main() {
 			} else {
 				for idx := range resp.Reservations {
 					for _, inst := range resp.Reservations[idx].Instances {
+						if inst.PrivateIpAddress == nil {
+							// Stopped, terminated, whatevs.
+							continue
+						}
 						if inst.Platform == nil || *inst.Platform != "windows" {
 							// Not Windows, phew
 							awsconf.AddHost(NewHostFromInstance(inst))
