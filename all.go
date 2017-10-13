@@ -481,9 +481,9 @@ func main() {
 		}
 		hostCount += 1
 
+		wg.Add(1)
 		if workflow {
 			// Workflow
-			wg.Add(1)
 
 			go func() {
 				defer wg.Done()
