@@ -23,6 +23,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -62,6 +63,7 @@ func main() {
 		auths    []ssh.AuthMethod
 		wfIndex  int
 		sleepFor time.Duration
+		wg       sync.WaitGroup
 	)
 
 	// Grab the current username, best we can
@@ -462,7 +464,7 @@ func main() {
 		config := &ssh.ClientConfig{
 			User:            configUser,
 			Auth:            auths,
-			HostKeyCallback: nil,
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		}
 
 		/*
@@ -481,7 +483,10 @@ func main() {
 
 		if workflow {
 			// Workflow
+			wg.Add(1)
+
 			go func() {
+				defer wg.Done()
 				defer bar.Increment()
 
 				// Sleeeeep
@@ -505,6 +510,7 @@ func main() {
 			// Command
 			com.Cmd = cmd
 			go func() {
+				defer wg.Done()
 				defer bar.Increment()
 
 				// Sleeeeep
@@ -603,6 +609,7 @@ func main() {
 	 * Post-result, pre-exit cleanups
 	 *
 	 */
+	wg.Wait()
 	if progressBar && logFile != "" {
 		bar.Finish()
 	}
