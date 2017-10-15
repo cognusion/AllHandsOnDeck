@@ -23,7 +23,7 @@ Usage of ./all:
   -bar
     	If outputting to a logfile, display a progress bar (default true)
   -cmd string
-    	Command to run
+    	The command to run
   -configdump
     	Load and parse configs, dump them to output and exit
   -configs string
@@ -59,20 +59,19 @@ Usage of ./all:
   -sshagent
     	Connect and use SSH-Agent vs. user key
   -sshkey string
-    	If not using the SSH-Agent, where to grab the key (default "~user/.ssh/id_rsa")
+    	If not using the SSH-Agent, where to grab the key (default "/home/m/.ssh/id_rsa")
   -sudo
     	Whether to run commands via sudo
   -timeout int
     	Seconds before the entire operation times out (default 60)
   -user string
-    	User to run as (default "yourusername")
+    	User to run as (default "M")
   -vars string
     	Comma-delimited list of variables to pass in for use in workflows, sometimes
   -wave int
     	Specify which "wave" this should be applied to
-  -workflow
-    	The --cmd is a workflow
-
+  -workflow string
+    	The workflow to run
 ```
 
 At it's simplest, All will execute the specified command on all your hosts, via your SSH key.
