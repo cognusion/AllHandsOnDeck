@@ -37,7 +37,7 @@ func main() {
 		sudo         bool
 		timeout      int
 		cmd          string
-		workflow     bool
+		workflow     string
 		filter       string
 		configTest   bool
 		quiet        bool
@@ -81,10 +81,10 @@ func main() {
 	flag.StringVar(&userName, "user", currentUser.Username, "User to run as")
 	flag.IntVar(&timeout, "timeout", 60, "Seconds before the entire operation times out")
 	flag.BoolVar(&sudo, "sudo", false, "Whether to run commands via sudo")
-	flag.BoolVar(&workflow, "workflow", false, "The --cmd is a workflow")
+	flag.StringVar(&workflow, "workflow", "", "The workflow to run")
 	flag.BoolVar(&quiet, "quiet", false, "Suppress most-if-not-all normal output")
 	flag.BoolVar(&configDump, "configdump", false, "Load and parse configs, dump them to output and exit")
-	flag.StringVar(&cmd, "cmd", "", "Command to run")
+	flag.StringVar(&cmd, "cmd", "", "The command to run")
 	flag.StringVar(&filter, "filter", "", "Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)")
 	flag.BoolVar(&listHosts, "listhosts", false, "List the hostnames and addresses and exit")
 	flag.BoolVar(&listFlows, "listworkflows", false, "List the workflows and exit")
@@ -264,13 +264,13 @@ func main() {
 	 * and cmd is a list,
 	 * we handle that here
 	 */
-	if workflow && strings.Contains(cmd, ",") {
+	if workflow != "" && strings.Contains(workflow, ",") {
 		newFlow := Workflow{
-			Name:      cmd,
+			Name:      workflow,
 			MustChain: false,
 		}
 
-		for _, c := range strings.Split(cmd, ",") {
+		for _, c := range strings.Split(workflow, ",") {
 			wfi := conf.WorkflowIndex(c)
 			if wfi < 0 {
 				log.Fatalf("Workflow '%s' in chain does not exist in specified configs!\n", c)
@@ -297,8 +297,8 @@ func main() {
 		os.Exit(0)
 	} else if listHosts {
 		// List all the configured hosts, applying filtering logic, and exit
-		if workflow {
-			wfIndex = conf.WorkflowIndex(cmd)
+		if workflow != "" {
+			wfIndex = conf.WorkflowIndex(workflow)
 		} else {
 			wfIndex = -1
 		}
@@ -316,9 +316,23 @@ func main() {
 	 *
 	 */
 
+	// Can't do both, anymore!
+	if cmd != "" && workflow != "" {
+		log.Fatalln("--cmd and --workflow are mutually exclusive!")
+	}
+
 	// We must have a command, no?
-	if cmd == "" {
-		log.Fatalln("--cmd must be set!")
+	if cmd == "" && workflow == "" {
+		log.Fatalln("--cmd or --workflow must be set!")
+	}
+
+	// Detect param swallowing
+	if strings.HasPrefix(cmd, "-") {
+		log.Fatalf("--cmd looks to be swallowing parameter '%s'\n", cmd)
+	}
+
+	if strings.HasPrefix(workflow, "-") {
+		log.Fatalf("--workflow looks to be swallowing parameter '%s'\n", workflow)
 	}
 
 	// Constrain format
@@ -374,26 +388,26 @@ func main() {
 		auths = []ssh.AuthMethod{ssh.PublicKeys(key)}
 	}
 
-	// If cmd is a workflow
+	// If workflow
 	//  - ensure the workflow exists
 	//  - cache the location of the specified workflow
 	//  - ensure we're not executing a must-chain flow
 	//  - ensure any required vars exist
 	//  - Do The Right Thing
-	if workflow {
-		wfIndex = conf.WorkflowIndex(cmd)
+	if workflow != "" {
+		wfIndex = conf.WorkflowIndex(workflow)
 		if wfIndex < 0 {
 			// Does it exist?
-			log.Fatalf("Workflow '%s' does not exist in specified configs!\n", cmd)
+			log.Fatalf("Workflow '%s' does not exist in specified configs!\n", workflow)
 		} else if conf.Workflows[wfIndex].MustChain {
 			// Must we chain it?
-			log.Fatalf("Workflow '%s' must be used in a chain!\n", cmd)
+			log.Fatalf("Workflow '%s' must be used in a chain!\n", workflow)
 		} else {
 			// Are all the required CLI vars set?
 			req := conf.Workflows[wfIndex].VarsRequired
 			for _, r := range req {
 				if _, ok := GlobalVars[r]; !ok {
-					log.Fatalf("Workflow '%s' requires unset CLI var '%s'!\n", cmd, r)
+					log.Fatalf("Workflow '%s' requires unset CLI var '%s'!\n", workflow, r)
 				}
 			}
 		}
@@ -408,7 +422,7 @@ func main() {
 		conf.Workflows[wfIndex].Init()
 
 	} else {
-		// cmd is not a workflow
+		// not a workflow
 		wfIndex = -1
 		if max == 0 {
 			// Autoconfig max execs
@@ -482,7 +496,7 @@ func main() {
 		hostCount += 1
 
 		wg.Add(1)
-		if workflow {
+		if workflow != "" {
 			// Workflow
 
 			go func() {
@@ -534,7 +548,7 @@ func main() {
 
 	// We wait for all the goros to finish up
 	for i := 0; i < len(hostList); i++ {
-		if workflow {
+		if workflow != "" {
 			// Workflow
 			select {
 			case res := <-wfResults:
