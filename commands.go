@@ -232,9 +232,9 @@ func (c *Command) Exec() (cr CommandReturn) {
 				ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
 			}
 			// Request pseudo terminal
-			if err := session.RequestPty("xterm", 80, 80, modes); err != nil {
-				Error.Printf("Request for pseudo terminal on %s failed: %s", connectName, err)
-				cr.Error = err
+			if serr := session.RequestPty("xterm", 80, 80, modes); serr != nil {
+				Error.Printf("Request for pseudo terminal on %s failed: %s", connectName, serr)
+				cr.Error = serr
 				return
 			}
 		}

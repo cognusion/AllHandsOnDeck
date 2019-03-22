@@ -478,7 +478,7 @@ autodetection is requested
 
 ## AWS EC2 "Waves"
 
-The "wave" facility is nice if you want explict control of which set of hosts is being impacted, however in AWS EC2, assuming you're doing it right, you can use Availability Zones (which are populated into the _Loc_ Host field) in lieu of waves:
+The "wave" facility is nice if you want explicit control of which set of hosts is being impacted, however in AWS EC2, assuming you're doing it right, you can use Availability Zones (which are populated into the _Loc_ Host field) in lieu of waves:
 
 ```bash
 all --filter "Loc == us-east-1a" ...

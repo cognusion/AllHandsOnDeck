@@ -51,8 +51,8 @@ func needsRestartingMangler(plist, drList []string) (initList []string) {
 		dontrestart[strings.TrimSpace(v)] = true
 	}
 
-	for _, p := range plist {
-		p := strings.TrimSpace(p)
+	for _, pitem := range plist {
+		p := strings.TrimSpace(pitem)
 		cmds := strings.SplitN(p, " : ", 2)
 		if len(cmds) > 1 {
 			cmds = strings.SplitN(cmds[1], " ", 2)

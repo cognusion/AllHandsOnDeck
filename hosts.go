@@ -83,7 +83,7 @@ func (h *Host) If(cond string) bool {
 		field, op, val := parts[0], parts[1], parts[2]
 		fuzzy := false
 
-		// Check for operator existance
+		// Check for operator existence
 		switch op {
 		case "==":
 		case "!=":
