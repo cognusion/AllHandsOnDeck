@@ -1,4 +1,4 @@
-// +build go1.4
+// +build go1.8
 
 /*
 All Hands On Deck (aka "all") is a simple agentless orchestration system written
@@ -11,7 +11,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/cheggaaa/pb"
+	"github.com/cheggaaa/pb/v3"
 	"github.com/cognusion/semaphore"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
