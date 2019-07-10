@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var host1 *Host = &Host{
+var host1 = &Host{
 	Address: "1.2.3.4",
 	Arch:    "x86_64",
 	Loc:     "east",
@@ -18,7 +18,7 @@ var host1 *Host = &Host{
 }
 
 // Tags == dev and Tags == httpd or Tags == haproxy or Tags == tomcat and Tags == daisy
-var host2 *Host = &Host{
+var host2 = &Host{
 	Tags: []string{"dev", "httpd", "tomcat", "daisy"},
 }
 

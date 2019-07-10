@@ -64,16 +64,16 @@ func getEc2Instances(AWSSession *session.Session) (diout *ec2.DescribeInstancesO
 	svc := ec2.New(AWSSession)
 
 	params := &ec2.DescribeInstancesInput{
-	/*InstanceIds: []*string{
-		aws.String("i-03b4b684"),
-	},*/
+		/*InstanceIds: []*string{
+			aws.String("i-03b4b684"),
+		},*/
 	}
 	diout, err = svc.DescribeInstances(params)
 
 	return
 }
 
-func NewHostFromInstance(inst *ec2.Instance) (h Host) {
+func newHostFromInstance(inst *ec2.Instance) (h Host) {
 
 	//fmt.Println(inst)
 

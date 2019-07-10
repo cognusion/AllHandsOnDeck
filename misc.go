@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+// GlobalVars is a horrific global string map
 var GlobalVars map[string]string
 
 // Misc is a simple key/value structure
@@ -107,7 +108,7 @@ func needsRestartingMangler(plist, drList []string) (initList []string) {
 	}
 
 	// Deduped, so now we make a simple array
-	for p, _ := range initMap {
+	for p := range initMap {
 		initList = append(initList, p)
 	}
 

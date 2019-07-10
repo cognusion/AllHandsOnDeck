@@ -51,9 +51,9 @@ func (cr *CommandReturn) StdoutString(nullToSpace bool) string {
 	if nullToSpace {
 		s := bytes.Replace(cr.Stdout.Bytes(), []byte{00}, []byte(" "), -1)
 		return string(s)
-	} else {
-		return cr.Stdout.String()
 	}
+	return cr.Stdout.String()
+
 }
 
 // StderrString return the Stderr buffer as a string
@@ -61,9 +61,8 @@ func (cr *CommandReturn) StderrString(nullToSpace bool) string {
 	if nullToSpace {
 		s := bytes.Replace(cr.Stderr.Bytes(), []byte{00}, []byte(" "), -1)
 		return string(s)
-	} else {
-		return cr.Stderr.String()
 	}
+	return cr.Stderr.String()
 }
 
 // StdoutStrings return the Stdout buffer as a string array
@@ -78,7 +77,7 @@ func (cr *CommandReturn) StderrStrings(nullToSpace bool) []string {
 	return s[:len(s)-1]
 }
 
-// Process inspected the CommandReturn pre-format the output
+// format the output of this CommandReturn
 func (cr *CommandReturn) format() commandOut {
 
 	f := commandOut{
@@ -108,7 +107,7 @@ func (cr *CommandReturn) format() commandOut {
 	return f
 }
 
-// Process inspected the CommandReturn and outputs XML
+// ToXML formats the CommandReturn and outputs XML
 func (cr *CommandReturn) ToXML() []byte {
 	if cr.Quiet {
 		return nil
@@ -124,7 +123,7 @@ func (cr *CommandReturn) ToXML() []byte {
 	return j
 }
 
-// Process inspected the CommandReturn and outputs JSON
+// ToJSON formats the CommandReturn and outputs JSON
 func (cr *CommandReturn) ToJSON(pretty bool) (j []byte) {
 	if cr.Quiet {
 		return
@@ -146,7 +145,7 @@ func (cr *CommandReturn) ToJSON(pretty bool) (j []byte) {
 	return
 }
 
-// Process inspected the CommandReturn and outputs structured text
+// ToText formats the CommandReturn and outputs structured text
 func (cr *CommandReturn) ToText() (out string) {
 	if cr.Quiet {
 		return
@@ -172,12 +171,12 @@ func (cr *CommandReturn) ToText() (out string) {
 	return
 }
 
-// Execute the Command structure, returning a CommandReturn
+// Exec executes the Command structure, returning a CommandReturn
 func (c *Command) Exec() (cr CommandReturn) {
 
 	if c.Cmd == "" {
 		Error.Printf("Command Exec request has no Cmd!")
-		cr.Error = fmt.Errorf("Command Exec request has no Cmd!")
+		cr.Error = fmt.Errorf("command Exec request has no Cmd")
 		return cr
 	}
 

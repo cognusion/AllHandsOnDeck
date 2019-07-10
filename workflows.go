@@ -88,6 +88,7 @@ func (w *Workflow) varParse(s string) string {
 	return s
 }
 
+// Init initializes a workflow
 func (w *Workflow) Init() {
 	w.vars = make(map[string]string)
 

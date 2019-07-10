@@ -41,16 +41,14 @@ func (h *Host) SearchTags(tag string, fuzzy bool) bool {
 	return false
 }
 
-/*
-	If takes a condition list ("filter") and applies it to the Host.
-	Tags == dev and Tags == httpd or Tags == haproxy or Tags == tomcat and Tags == daisy
+/* If takes a condition list ("filter") and applies it to the Host.
+Tags == dev and Tags == httpd or Tags == haproxy or Tags == tomcat and Tags == daisy
 
-	Tags == dev
-	&&
-	Tags == httpd or Tags == haproxy or Tags == tomcat
-	&&
-	Tags == daisy
-*/
+Tags == dev
+&&
+Tags == httpd or Tags == haproxy or Tags == tomcat
+&&
+Tags == daisy */
 func (h *Host) If(cond string) bool {
 
 	//Debug.Printf("COND: %s\n",cond)
@@ -164,6 +162,7 @@ func (h *Host) If(cond string) bool {
 	}
 }
 
+// And returns true if all of the conditions are true
 func (h *Host) And(conds []string) bool {
 	for _, a := range conds {
 		ret := h.If(a)
@@ -174,6 +173,7 @@ func (h *Host) And(conds []string) bool {
 	return true
 }
 
+// Or returns true if any of the conditions are true
 func (h *Host) Or(conds []string) bool {
 	for _, o := range conds {
 		//Debug.Printf("\tOR: %s\n",o)

@@ -13,7 +13,7 @@ type Config struct {
 	Miscs     []Misc
 }
 
-// Adds a Host to Hosts
+// AddHost adds a Host to Hosts
 func (c *Config) AddHost(h Host) {
 	c.Hosts = append(c.Hosts, h)
 }
@@ -28,7 +28,7 @@ func (c *Config) Merge(conf Config) {
 // WorkflowIndex finds the named workflow in the Config, and
 // returns its index, or -1 if it is not found
 func (c *Config) WorkflowIndex(workflow string) int {
-	var flowIndex int = -1
+	var flowIndex = -1
 	for i, wf := range c.Workflows {
 		if wf.Name == workflow {
 			flowIndex = i
@@ -38,7 +38,7 @@ func (c *Config) WorkflowIndex(workflow string) int {
 	return flowIndex
 }
 
-// Given a filter, count the matching hosts
+// FilteredHostList returns the hosts that match a filter
 func (c *Config) FilteredHostList(filter string, wave, workflowIndex int) (hosts []Host) {
 
 	for _, host := range c.Hosts {

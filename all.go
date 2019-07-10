@@ -248,7 +248,7 @@ func main() {
 						}
 						if inst.Platform == nil || *inst.Platform != "windows" {
 							// Not Windows, phew
-							awsconf.AddHost(NewHostFromInstance(inst))
+							awsconf.AddHost(newHostFromInstance(inst))
 						}
 					}
 				}
@@ -461,7 +461,7 @@ func main() {
 	// We've made it through checks and tests.
 	// Let's do this.
 	hostList := make(map[string]bool)
-	var hostCount time.Duration = 0
+	var hostCount time.Duration
 	for _, host := range filteredHosts {
 
 		// Add the host to the list, and set its return status to false
@@ -493,7 +493,7 @@ func main() {
 		if sleepFor > 0 && hostCount > 0 {
 			wait = hostCount * sleepFor
 		}
-		hostCount += 1
+		hostCount++
 
 		wg.Add(1)
 		if workflow != "" {

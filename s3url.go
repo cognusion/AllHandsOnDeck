@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// The parts of an S3 URL
+// S3Url is the parts of an S3 URL
 type S3Url struct {
 	Bucket string
 	Path   string
@@ -20,12 +20,12 @@ type S3Url struct {
 	Params string
 }
 
-// Convert the Params string to a []string
+// ParamList converts the Params string to a []string
 func (s *S3Url) ParamList() []string {
 	return strings.Split(s.Params, "&")
 }
 
-// Convert an S3 URL into a S3Url structure
+// s3UrlToParts converts an S3 URL into a S3Url structure
 func s3UrlToParts(url string) (sr *S3Url) {
 
 	if strings.HasPrefix(url, "http") {

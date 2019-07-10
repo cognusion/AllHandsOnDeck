@@ -61,6 +61,7 @@ func TestAll_WorkflowIndex(t *testing.T) {
 	}
 }
 
+/*
 func TestAll_WorkflowChain(t *testing.T) {
 	var conf Config
 	conf = loadConfigFile("testconfigs/testflows.json", conf)
@@ -74,3 +75,4 @@ func TestAll_WorkflowMustChain(t *testing.T) {
 
 	// TODO: test chaining workflows with and without MustChain
 }
+*/

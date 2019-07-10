@@ -4,9 +4,11 @@ import (
 	"testing"
 )
 
-var string1 string = "s3://thisisthebucket/path/to/file.zip"
-var string2 string = "http://thisisthebucket.s3.amazonaws.com/path/to/file.zip?someparam=somevalue"
-var string3 string = "https://thisisthebucket.s3.amazonaws.com/path/to/file.zip?someparam=somevalue"
+var (
+	string1 = "s3://thisisthebucket/path/to/file.zip"
+	string2 = "http://thisisthebucket.s3.amazonaws.com/path/to/file.zip?someparam=somevalue"
+	string3 = "https://thisisthebucket.s3.amazonaws.com/path/to/file.zip?someparam=somevalue"
+)
 
 func TestS3_TokenGen(t *testing.T) {
 	bucket := "thisisthbucket"
