@@ -3,11 +3,9 @@ module github.com/cognusion/AllHandsOnDeck
 go 1.12
 
 require (
-	github.com/aws/aws-sdk-go v1.25.1
-	github.com/cheggaaa/pb/v3 v3.0.1
-	github.com/cognusion/semaphore v0.0.0-20170614175550-cfa287382ee8
-	github.com/mattn/go-isatty v0.0.9 // indirect
-	github.com/stretchr/testify v1.4.0 // indirect
-	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
-	golang.org/x/sys v0.0.0-20190927073244-c990c680b611 // indirect
+	github.com/aws/aws-sdk-go v1.30.29
+	github.com/cheggaaa/pb/v3 v3.0.4
+	github.com/cognusion/semaphore v1.0.1
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	golang.org/x/sys v0.0.0-20200515095857-1151b9dac4a9 // indirect
 )
