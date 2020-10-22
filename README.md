@@ -1,8 +1,8 @@
 # AllHandsOnDeck
+
 All Hands On Deck (aka "all") is a simple agentless orchestration system written in Go, for Linux. You can run it *from* any platform that supports Go (Macs are popular, I hear). Commands are executed via SSH in parallelish, as are workflows (commands within a workflow are executed serially);
 
-Basics
-======
+## Basics
 
 All allows you to execute arbitrary "commands" on hosts. You can also group "commands" into "workflows", which can be pretty complicated. 
 
@@ -16,62 +16,34 @@ go build -o all
 
 ./all --help
 Usage of ./all:
-  -awshosts
-    	Get EC2 hosts and tags from AWS API
-  -awsregions string
-    	Comma-delimited list of AWS Regions to check if --awshosts is set
-  -bar
-    	If outputting to a logfile, display a progress bar (default true)
-  -cmd string
-    	The command to run
-  -configdump
-    	Load and parse configs, dump them to output and exit
-  -configs string
-    	Path to the folder where the config files are (*.json) (default "configs/")
-  -configtest
-    	Load and parse configs, and exit
-  -debug
-    	Enable Debug output
-  -debuglogfile string
-    	Output debugs to a logfile, instead of standard error
-  -dnf
-    	Use dnf instead of yum for some commands
-  -dryrun
-    	If you want to go through the motions, but never actually SSH to anything
-  -errorlogfile string
-    	Output errors to a logfile, instead of standard error
-  -filter string
-    	Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)
-  -format string
-    	Output format. One of: text, json, or xml (default "text")
-  -listhosts
-    	List the hostnames and addresses and exit
-  -listworkflows
-    	List the workflows and exit
-  -logfile string
-    	Output to a logfile, instead of standard out (enables progressbar to screen)
-  -max int
-    	Specify the maximum number of concurrent commands to execute. Set to 0 to make a good guess for you (default 0)
-  -quiet
-    	Suppress most-if-not-all normal output
-  -sleep string
-    	Duration to sleep between host iterations (e.g. 32ms or 1s) (default "0ms")
-  -sshagent
-    	Connect and use SSH-Agent vs. user key
-  -sshkey string
-    	If not using the SSH-Agent, where to grab the key (default "/home/m/.ssh/id_rsa")
-  -sudo
-    	Whether to run commands via sudo
-  -timeout int
-    	Seconds before the entire operation times out (default 60)
-  -user string
-    	User to run as (default "M")
-  -vars string
-    	Comma-delimited list of variables to pass in for use in workflows, sometimes
-  -wave int
-    	Specify which "wave" this should be applied to
-  -workflow string
-    	The workflow to run
+      --awshosts              Get EC2 hosts and tags from AWS API
+      --awsregions string     Comma-delimited list of AWS Regions to check if --awshosts is set
+      --bar                   If outputting to a logfile, display a progress bar (default true)
+      --cmd string            The command to run
+      --configdump            Load and parse configs, dump them to output and exit
+      --configs string        Path to the folder where the config files are (*.json) (default "configs/")
+      --configtest            Load and parse configs, and exit
+      --debug                 Enable Debug output
+      --debuglogfile string   Output debugs to a logfile, instead of standard error
+      --dnf                   Use dnf instead of yum for some commands
+      --dryrun                If you want to go through the motions, but never actually SSH to anything
+      --errorlogfile string   Output errors to a logfile, instead of standard error
+      --filter string         Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)
+      --format string         Output format. One of: text, json, or xml (default "text")
+      --listhosts             List the hostnames and addresses and exit
+      --listworkflows         List the workflows and exit
+      --logfile string        Output to a logfile, instead of standard out (enables progressbar to screen)
+      --max int               Specify the maximum number of concurrent commands to execute. Set to 0 to make a good guess for you (default 0)
+      --quiet                 Suppress most-if-not-all normal output
+      --sleep string          Duration to sleep between host iterations (e.g. 32ms or 1s) (default "0ms")
+      --sshagent              Connect and use SSH-Agent vs. user key
+      --sshkey string         If not using the SSH-Agent, where to grab the key (default "/home/m/.ssh/id_rsa")
+      --sudo                  Whether to run commands via sudo
+      --timeout int           Seconds before the entire operation times out (default 60)
+      --user string           User to run as (default "M")
+      --vars string           Comma-delimited list of variables to pass in for use in workflows, sometimes
+      --wave int              Specify which "wave" this should be applied to
+      --workflow string       The workflow to run
 ```
 
 At it's simplest, All will execute the specified command on all your hosts, via your SSH key.
@@ -79,23 +51,28 @@ At it's simplest, All will execute the specified command on all your hosts, via 
 ```bash
 all --cmd uptime
 ```
+
 Using a running ssh-agent is as hard as adding --sshagent to the command string, which allows you to support multiple keys, etc.
+
 ```bash
 all --cmd uptime --sshagent
 ```
+
 It may be necessary to run some commands via sudo, which is similarly trivial.
+
 ```bash
 all --cmd 'uptime; whoami' --sudo
 ```
+
 Although sudo does require a pseudo-terminal, and the user needs permission to execute the commands requested.
 
 To that end, maybe running All on *all* your hosts isn't a grand idea, so perhaps you'll tag the hosts you want to allow the 'uptime' command to run on, with the tag 'uptime', then you can do:
+
 ```bash
 all --cmd uptime --filter 'Tags == uptime'
 ```
 
-Configs
-=======
+## Configs
 
 So how would you tag your hosts? There aren't any hosts listed on that command up there. Relax, we got this.
 
@@ -105,10 +82,10 @@ Additionally, if you use Amazon Web Services EC2, you can use the live inventory
 
 Some utilities like giving configs fancy names like "recipes" or "playbooks" so they seem like more than they are. I don't. These configs are still fancy, though.
 
-Host
-----
+### Host
 
 Configs can specify hosts which can have:
+
 * Address - IP address of the host (optional, if Name is a valid DNS hostname) (AWS: Private IP Address)
 * Arch - Architecture of the host (e.g. 'x86_64') (optional) (AWS: Architecture)
 * Loc - Location of the system (e.g. 'Denver', or 'Rack 12', or whatever) (optional) (AWS: Availability Zone)
@@ -139,12 +116,11 @@ Configs can specify hosts which can have:
 }
 ```
 
-### AWS Tags
+#### AWS Tags
 
 The "tags" array will be populated with all of the EC2 tags (EXCEPT the ones previously noted that are used to fill in other fields) in the format of "key|value" unless only the "key" is defined, then it will just be "key". **Keep this in mind when filtering**!!
 
-Workflow
---------
+### Workflow
 
 Configs may also declare "workflows". A workflow is simply a named list of commands. 
 
@@ -190,14 +166,14 @@ Workflows are quite powerful, and allow you to specify:
 	]
 }
 ```
+
 It is worth noting that each command in a workflow is executed in order, serially, and atomically. Thus if you "cd" in one command, don't expect that in a subsequent command cwd will be where you left it. If you *must* do such things (there is probably a better way to do what you're thinking of), chain multiple commands with semicolons, e.g.
 
 ```bash
 "cd /tmp; mkdir X; cd X; somecommand"
 ```
 
-Misc
-----
+### Misc
 
 Some things are clunky on the CLI, or shouldn't be passed that way, or we're simply lazy and want to make sure that whenever we run anything, that thing is set the way we want. That's what a _Misc_ is for. Miscs override CLI params if set.
 
@@ -232,18 +208,19 @@ Some things are clunky on the CLI, or shouldn't be passed that way, or we're sim
 }
 ```
 
-### awsaccess_key
+#### awsaccess_key
 
 Along with _awsaccess_secretkey_ below, these are used for Amazon Web Services operations that need credentials. Currently just creating S3 time-token URLs when using the _S3()_ workflow special command.
 
-### awsaccess_secretkey
+#### awsaccess_secretkey
 
 Along with _awsaccess_key_ above, these are used for Amazon Web Services operations that need credentials. Currently just creating S3 time-token URLs when using the _S3()_ workflow special command.
 
-### aws_regions
+#### aws_regions
 
 Along with all the other _awsaccess_ bits, this is a comma-delimited list of AWS EC2 Regions
 to act on if either _--awshosts_ or _useawshosts_ are used. This is the equivalient of _--awsregions_.
+
 ```json
 	{
 		"name": "aws_regions",
@@ -251,13 +228,14 @@ to act on if either _--awshosts_ or _useawshosts_ are used. This is the equivali
 	}
 ```
 
-### debugoutputlog
+#### debugoutputlog
 
 Specifies where you want debug logging to go if you use _--debug_ (versus stderr).
 
-### dontrestart-processes
+#### dontrestart-processes
 
 If you use the _FOR list ACTION_ workflow special command, this slightly misnamed config allows you to specify a comma-delimited list of processes you don't want to _ACTION_ under any circumstances.
+
 ```json
     {
 		"name": "dontrestart-processes",
@@ -265,13 +243,14 @@ If you use the _FOR list ACTION_ workflow special command, this slightly misname
 	}
 ```
 
-### erroroutputlog
+#### erroroutputlog
 
 Specifies where you want error logging to go (versus stderr).
 
-### maxexecs
+#### maxexecs
 
 The system default for maximum execution is 0 (educated guess), and if you always want that to be something different, it's obnoxious to specify it on the CLI all the time. Set this instead:
+
 ```json
 	{
 		"name": "maxexecs",
@@ -279,9 +258,10 @@ The system default for maximum execution is 0 (educated guess), and if you alway
 	}
 ```
 
-### outputformat
+#### outputformat
 
 The default _-format_ is "text", and if you always want that to be something different, it's obnoxious to specify it on the CLI all the time. Set this instead:
+
 ```json
 	{
 		"name": "outputformat",
@@ -291,13 +271,14 @@ The default _-format_ is "text", and if you always want that to be something dif
 
 Values are text, json, or xml.
 
-### outputlog
+#### outputlog
 
 Specifies where you want regular output to go (versus stdout).
 
-### useawshosts
+#### useawshosts
 
 If you always want to use the AWS EC2 inventory, set this instead:
+
 ```json
 	{
 		"name": "useawshosts",
@@ -305,10 +286,10 @@ If you always want to use the AWS EC2 inventory, set this instead:
 	}
 ```
 
-
-### usesshagent
+#### usesshagent
 
 If you always want to use an SSH agent, it's obnoxious to specify it on the CLI all the time. Set this instead:
+
 ```json
 	{
 		"name": "usesshagent",
@@ -316,8 +297,10 @@ If you always want to use an SSH agent, it's obnoxious to specify it on the CLI 
 	}
 ```
 
-### usednf
+#### usednf
+
 If you always want to use dnf instead of yum, it's obnoxious to specify it on the CLI all the time. Set this instead:
+
 ```json
 	{
 		"name": "usednf",
@@ -325,8 +308,7 @@ If you always want to use dnf instead of yum, it's obnoxious to specify it on th
 	}
 ```
 
-Filters
-=======
+## Filters
 
 So filters are pretty neat-looking, ya? Filters may be specified on the command-line via --filter, and/or as a value of the "filter" element of a workflow.
 
@@ -344,16 +326,13 @@ Finally, if the name of the host is not ugly, the filter succeeds and this host 
 
 Since v2.1, filters also support limited fuzzy matching via _~=_ ("kinda equal") and _~!_ ("kinda not") operators. **Currently, it is a simple substring match, but may evolve in the future.**
 
-AWS Tags
---------
+### AWS Tags
 
 The "tags" array will be populated with all of the EC2 tags (EXCEPT the ones previously noted that are used to fill in other fields) in the format of "key|value" unless only the "key" is defined, then it will just be "key". **Keep this in mind when filtering**!!
 
-Workflow Special Commands
-=========================
+## Workflow Special Commands
 
-SLEEP
------
+### SLEEP
 
     SLEEP duration
 
@@ -363,15 +342,13 @@ Sure, you could waste an SSH connection to have the remote system sleep, but it'
 SLEEP 5s
 ```
 
-QUIET
------
+### QUIET
 
     QUIET command
 
 Sometimes a command's output is inconsequential. Leading it with _QUIET_ will suppress output of that one command when the workflow is post-processing. 
 
-FOR
----
+### FOR
 
     FOR list ACTION
 
@@ -389,8 +366,7 @@ FOR mysql tomcat httpd START
 FOR mongod STATUS
 ```
 
-SET
----
+### SET
 
     SET %varname% "Some String Value"
 
@@ -427,8 +403,7 @@ You can specify an AWS S3 URL (e.g. s3://bucketname/some/file/some/where) and if
 SET %MYURL% S3(s3://mybucket/myfile.mov)
 ```
 
-Some Things You Haven't Asked Yet
-=================================
+# Some Things You Haven't Asked Yet
 
 ## Running Without Filters
 
@@ -445,7 +420,6 @@ myserver
 ```
 
 Every command in All is executed as a unique session to the remote host, so if you need to ensure same-session execution of commands, use semicolons. 
-
 
 ## Timeouts
 
@@ -488,17 +462,8 @@ all --filter "Loc == us-east-1b" ...
 all --filter "Loc ~= us-west-2" ...
 ```
 
+# Forward, Ho
 
-Forward, Ho
-===========
-
-All was written for specific purposes 2013-2014, and is being ground-up rewritten to take advantage of new Go tech, lessons learned from 2 years of using it, and lessons learned from writing lots of Go - better Go - since then. As such, All as it is here isn't complete yet. Additionally, there are some things I want to add that would have been very difficult in with the old code base. The TODO list, In no particular order:
-
-1. scp-able helper files (quazi-agents) (almost unnecessary with new workflow)
-3. allsh, the All shell
-4. Moar "Workflow Special Commands"
-6. Option to fail Workflow command on stderr content
+All was written for specific purposes 2013-2014, and is being ground-up rewritten to take advantage of new Go tech, lessons learned from 2 years of using it, and lessons learned from writing lots of Go - better Go - since then. As such, All as it is here isn't complete yet. Additionally, there are some things I want to add that would have been very difficult in with the old code base.
 
 **Pull requests are welcome**. If you're serious about wanting to hack at something here, please reach out. I may/probably have pointers or even stub code related to these.
-
-Also, feel free to add to this list, via feature requests, or their more better brethren: pull requests. :)
