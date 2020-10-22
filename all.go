@@ -9,12 +9,12 @@ within a workflow are executed serially)
 package main
 
 import (
-	"flag"
-	"fmt"
 	"github.com/cheggaaa/pb/v3"
 	"github.com/cognusion/semaphore"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
+
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
@@ -25,6 +25,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/spf13/pflag"
 )
 
 func main() {
@@ -73,35 +75,35 @@ func main() {
 	commandResults := make(chan CommandReturn, 100)
 	wfResults := make(chan WorkflowReturn, 100)
 
-	flag.BoolVar(&sshAgent, "sshagent", false, "Connect and use SSH-Agent vs. user key")
-	flag.StringVar(&sshKey, "sshkey", currentUser.HomeDir+"/.ssh/id_rsa", "If not using the SSH-Agent, where to grab the key")
-	flag.BoolVar(&debug, "debug", false, "Enable Debug output")
-	flag.BoolVar(&configTest, "configtest", false, "Load and parse configs, and exit")
-	flag.StringVar(&configFolder, "configs", "configs/", "Path to the folder where the config files are (*.json)")
-	flag.StringVar(&userName, "user", currentUser.Username, "User to run as")
-	flag.IntVar(&timeout, "timeout", 60, "Seconds before the entire operation times out")
-	flag.BoolVar(&sudo, "sudo", false, "Whether to run commands via sudo")
-	flag.StringVar(&workflow, "workflow", "", "The workflow to run")
-	flag.BoolVar(&quiet, "quiet", false, "Suppress most-if-not-all normal output")
-	flag.BoolVar(&configDump, "configdump", false, "Load and parse configs, dump them to output and exit")
-	flag.StringVar(&cmd, "cmd", "", "The command to run")
-	flag.StringVar(&filter, "filter", "", "Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)")
-	flag.BoolVar(&listHosts, "listhosts", false, "List the hostnames and addresses and exit")
-	flag.BoolVar(&listFlows, "listworkflows", false, "List the workflows and exit")
-	flag.IntVar(&wave, "wave", 0, "Specify which \"wave\" this should be applied to")
-	flag.IntVar(&max, "max", 0, "Specify the maximum number of concurrent commands to execute. Set to 0 to make a good guess for you (default 0)")
-	flag.StringVar(&format, "format", "text", "Output format. One of: text, json, or xml")
-	flag.StringVar(&logFile, "logfile", "", "Output to a logfile, instead of standard out (enables progressbar to screen)")
-	flag.StringVar(&errorLogFile, "errorlogfile", "", "Output errors to a logfile, instead of standard error")
-	flag.StringVar(&debugLogFile, "debuglogfile", "", "Output debugs to a logfile, instead of standard error")
-	flag.BoolVar(&progressBar, "bar", true, "If outputting to a logfile, display a progress bar")
-	flag.BoolVar(&dryrun, "dryrun", false, "If you want to go through the motions, but never actually SSH to anything")
-	flag.StringVar(&sleepStr, "sleep", "0ms", "Duration to sleep between host iterations (e.g. 32ms or 1s)")
-	flag.BoolVar(&awsHosts, "awshosts", false, "Get EC2 hosts and tags from AWS API")
-	flag.StringVar(&awsRegions, "awsregions", "", "Comma-delimited list of AWS Regions to check if --awshosts is set")
-	flag.StringVar(&cliVars, "vars", "", "Comma-delimited list of variables to pass in for use in workflows, sometimes")
-	flag.BoolVar(&dnf, "dnf", false, "Use dnf instead of yum for some commands")
-	flag.Parse()
+	pflag.BoolVar(&sshAgent, "sshagent", false, "Connect and use SSH-Agent vs. user key")
+	pflag.StringVar(&sshKey, "sshkey", currentUser.HomeDir+"/.ssh/id_rsa", "If not using the SSH-Agent, where to grab the key")
+	pflag.BoolVar(&debug, "debug", false, "Enable Debug output")
+	pflag.BoolVar(&configTest, "configtest", false, "Load and parse configs, and exit")
+	pflag.StringVar(&configFolder, "configs", "configs/", "Path to the folder where the config files are (*.json)")
+	pflag.StringVar(&userName, "user", currentUser.Username, "User to run as")
+	pflag.IntVar(&timeout, "timeout", 60, "Seconds before the entire operation times out")
+	pflag.BoolVar(&sudo, "sudo", false, "Whether to run commands via sudo")
+	pflag.StringVar(&workflow, "workflow", "", "The workflow to run")
+	pflag.BoolVar(&quiet, "quiet", false, "Suppress most-if-not-all normal output")
+	pflag.BoolVar(&configDump, "configdump", false, "Load and parse configs, dump them to output and exit")
+	pflag.StringVar(&cmd, "cmd", "", "The command to run")
+	pflag.StringVar(&filter, "filter", "", "Boolean expression to positively filter on host elements (Tags, Name, Address, Arch, User, Port, etc.)")
+	pflag.BoolVar(&listHosts, "listhosts", false, "List the hostnames and addresses and exit")
+	pflag.BoolVar(&listFlows, "listworkflows", false, "List the workflows and exit")
+	pflag.IntVar(&wave, "wave", 0, "Specify which \"wave\" this should be applied to")
+	pflag.IntVar(&max, "max", 0, "Specify the maximum number of concurrent commands to execute. Set to 0 to make a good guess for you (default 0)")
+	pflag.StringVar(&format, "format", "text", "Output format. One of: text, json, or xml")
+	pflag.StringVar(&logFile, "logfile", "", "Output to a logfile, instead of standard out (enables progressbar to screen)")
+	pflag.StringVar(&errorLogFile, "errorlogfile", "", "Output errors to a logfile, instead of standard error")
+	pflag.StringVar(&debugLogFile, "debuglogfile", "", "Output debugs to a logfile, instead of standard error")
+	pflag.BoolVar(&progressBar, "bar", true, "If outputting to a logfile, display a progress bar")
+	pflag.BoolVar(&dryrun, "dryrun", false, "If you want to go through the motions, but never actually SSH to anything")
+	pflag.StringVar(&sleepStr, "sleep", "0ms", "Duration to sleep between host iterations (e.g. 32ms or 1s)")
+	pflag.BoolVar(&awsHosts, "awshosts", false, "Get EC2 hosts and tags from AWS API")
+	pflag.StringVar(&awsRegions, "awsregions", "", "Comma-delimited list of AWS Regions to check if --awshosts is set")
+	pflag.StringVar(&cliVars, "vars", "", "Comma-delimited list of variables to pass in for use in workflows, sometimes")
+	pflag.BoolVar(&dnf, "dnf", false, "Use dnf instead of yum for some commands")
+	pflag.Parse()
 
 	/*
 	 * Initially handle Logging: debug, error, and "standard"
