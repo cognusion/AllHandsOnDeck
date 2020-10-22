@@ -41,7 +41,7 @@ func (h *Host) SearchTags(tag string, fuzzy bool) bool {
 	return false
 }
 
-/* If takes a condition list ("filter") and applies it to the Host.
+/*If takes a condition list ("filter") and applies it to the Host.
 Tags == dev and Tags == httpd or Tags == haproxy or Tags == tomcat and Tags == daisy
 
 Tags == dev

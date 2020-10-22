@@ -6,6 +6,7 @@ import (
 	"os"
 )
 
+// Global log vars
 var (
 	Debug = log.New(ioutil.Discard, "", log.Lshortfile)
 	Log   = log.New(os.Stdout, "", 0)
