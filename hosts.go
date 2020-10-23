@@ -11,15 +11,16 @@ import (
 
 // Host is a structure to capture properties of individual systems
 type Host struct {
-	Address string
-	Arch    string
-	Loc     string
-	Wave    int
-	Name    string
-	Offline bool
-	Port    int
-	Tags    []string
-	User    string
+	Address            string
+	Arch               string
+	Loc                string
+	Wave               int
+	Name               string
+	Offline            bool
+	Port               int
+	Tags               []string
+	User               string
+	DontUpdatePackages string
 }
 
 // SortTags sorts the Host's Tags array in alphanumeric order

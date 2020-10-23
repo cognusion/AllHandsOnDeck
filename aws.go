@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"strconv"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"log"
-	"os"
-	"strconv"
 )
 
 func initAWS(awsRegion, awsAccessKey, awsSecretKey string) (AWSSession *session.Session) {
@@ -101,6 +102,9 @@ func newHostFromInstance(inst *ec2.Instance) (h Host) {
 		} else if *t.Key == "noall" {
 			// They don't want our help
 			h.Offline = true
+		} else if *t.Key == "dontupdatepackages" {
+			// They don't want certain yum updates
+			h.DontUpdatePackages = *t.Value
 		} else {
 			var tag string
 			if t.Value == nil || *t.Value == "" {

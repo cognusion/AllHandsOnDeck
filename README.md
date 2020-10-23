@@ -120,9 +120,13 @@ Configs can specify hosts which can have:
 
 The "tags" array will be populated with all of the EC2 tags (EXCEPT the ones previously noted that are used to fill in other fields) in the format of "key|value" unless only the "key" is defined, then it will just be "key". **Keep this in mind when filtering**!!
 
+##### dontupdatepackages
+
+If a host has a tag of ``dontupdatepackages`` and you have a yum/dnf command stanza that contains a call to ``DONTUPDATEPACKAGES()``, then when that command is executed against that host, it will have ``--exclude=<value of dontupdatepackages tag>`` in place of the call. If the host doesn't have the tag, or it is empty, then the call is replaced with an empty string.
+
 ### Workflow
 
-Configs may also declare "workflows". A workflow is simply a named list of commands. 
+Configs may also declare "workflows". A workflow is simply a named list of commands.
 
 ```json
 {

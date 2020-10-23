@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const dontUpdatePackages = "DONTUPDATEPACKAGES()"
+
 // WorkflowReturn is a structure returned after executing a workflow
 type WorkflowReturn struct {
 	Name           string
@@ -147,6 +149,12 @@ func (w *Workflow) Exec(com Command) (wr WorkflowReturn) {
 		} else {
 			// Make sure we're not quiet
 			com.Quiet = false
+		}
+
+		// Handle DontUpdatePackages
+		if strings.Contains(c, dontUpdatePackages) {
+			Debug.Printf("%s: %s", dontUpdatePackages, com.Host.DontUpdatePackages)
+			c = w.handleDNUP(c, com.Host.DontUpdatePackages)
 		}
 
 		if strings.HasPrefix(c, "%%") {
@@ -329,6 +337,15 @@ func (w *Workflow) handleSleep(vvalue string) error {
 	}
 	return err
 
+}
+
+func (w *Workflow) handleDNUP(vvalue, dnup string) string {
+	if dnup == "" {
+		// nothing
+		return strings.Replace(vvalue, dontUpdatePackages, dnup, -1)
+	}
+
+	return strings.Replace(vvalue, dontUpdatePackages, fmt.Sprintf("--exclude=%s", dnup), -1)
 }
 
 // Get a saneMaxLimit, based on the number of commands in the workflow
