@@ -197,7 +197,7 @@ func (w *Workflow) handleFor(c string, com Command) ([]CommandReturn, error) {
 	cparts := strings.Fields(c)
 	if len(cparts) < 3 {
 		// Hmmm, malformated FOR
-		return crs, fmt.Errorf("'FOR list ACTION' statement incomplete: '%s'\n", c)
+		return crs, fmt.Errorf("'FOR list ACTION' statement incomplete: '%s'", c)
 	}
 
 	var list []string
@@ -216,7 +216,7 @@ func (w *Workflow) handleFor(c string, com Command) ([]CommandReturn, error) {
 		if listRes.Error != nil {
 			// We have a valid error, and must break, as we'll have
 			//  an invalid list to operate on
-			return crs, fmt.Errorf("needs-restarting on host %s failed: %s\n", com.Host.Name, listRes.Error)
+			return crs, fmt.Errorf("needs-restarting on host %s failed: %s", com.Host.Name, listRes.Error)
 		}
 		list = needsRestartingMangler(listRes.StdoutStrings(true), makeList([]string{GlobalVars["dontrestart-processes"]}))
 	} else {
@@ -253,7 +253,7 @@ func (w *Workflow) handleSet(c string) (err error) {
 
 	if len(cparts) < 3 {
 		// Hmmm, malformated SET
-		return fmt.Errorf("SET statement incomplete: '%s'\n", c)
+		return fmt.Errorf("error SET statement incomplete: '%s'", c)
 	}
 
 	vname := strings.Trim(cparts[1], "%") // nuke the lead/trail percents from the varname
@@ -287,15 +287,15 @@ func (w *Workflow) handleS3(vvalue, accessKey, secretKey string) (string, error)
 
 	// Confirm we actually have the bits set
 	if _, ok := GlobalVars["awsaccess_key"]; ok == false {
-		return "", fmt.Errorf("No AWS access key set, but S3() called\n")
+		return "", fmt.Errorf("no AWS access key set, but S3() called")
 	} else if _, ok := GlobalVars["awsaccess_secretkey"]; ok == false {
-		return "", fmt.Errorf("No AWS secret key set, but S3() called\n")
+		return "", fmt.Errorf("no AWS secret key set, but S3() called")
 	}
 
 	re := regexp.MustCompile(`^(.*)S3\((.*)\)(.*)$`)
 	rparts := re.FindStringSubmatch(vvalue)
 	if rparts == nil {
-		return "", fmt.Errorf("Error processing S3(s): '%s'\n", vvalue)
+		return "", fmt.Errorf("error processing S3(s): '%s'", vvalue)
 	}
 
 	s3u := s3UrlToParts(rparts[2])
@@ -310,12 +310,12 @@ func (w *Workflow) handleRand(vvalue string) (string, error) {
 	re := regexp.MustCompile(`^(.*)RAND\(([0-9]+)\)(.*)$`)
 	rparts := re.FindStringSubmatch(vvalue)
 	if rparts == nil {
-		return "", fmt.Errorf("Error processing RAND(n): '%s'\n", vvalue)
+		return "", fmt.Errorf("Error processing RAND(n): '%s'", vvalue)
 	}
 
 	n, err := strconv.Atoi(rparts[2])
 	if err != nil {
-		return "", fmt.Errorf("Problem using '%s' as a number\n", rparts[2])
+		return "", fmt.Errorf("Problem using '%s' as a number", rparts[2])
 	}
 	return rparts[1] + randString(n) + rparts[3], nil
 }
