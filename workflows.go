@@ -224,7 +224,7 @@ func (w *Workflow) handleFor(c string, com Command) ([]CommandReturn, error) {
 		if listRes.Error != nil {
 			// We have a valid error, and must break, as we'll have
 			//  an invalid list to operate on
-			return crs, fmt.Errorf("needs-restarting on host %s failed: %s", com.Host.Name, listRes.Error)
+			return crs, fmt.Errorf("needs-restarting (%s) on host %s failed: %s", com.Cmd, com.Host.Name, listRes.Error)
 		}
 		list = needsRestartingMangler(listRes.StdoutStrings(true), makeList([]string{GlobalVars["dontrestart-processes"]}))
 	} else {
