@@ -1,4 +1,4 @@
-// +build go1.8
+//go:build go1.8
 
 /*
 All Hands On Deck (aka "all") is a simple agentless orchestration system written
@@ -507,9 +507,7 @@ func main() {
 
 				// Sleeeeep
 				Debug.Printf("Sleeping for %s\n", wait)
-				select {
-				case <-time.After(wait):
-				}
+				time.Sleep(wait)
 
 				sem.Lock()
 				defer sem.Unlock()
@@ -531,9 +529,7 @@ func main() {
 
 				// Sleeeeep
 				Debug.Printf("Sleeping for %s\n", wait)
-				select {
-				case <-time.After(wait):
-				}
+				time.Sleep(wait)
 
 				sem.Lock()
 				defer sem.Unlock()
@@ -556,11 +552,11 @@ func main() {
 			case res := <-wfResults:
 				hostList[res.HostObj.Name] = true // returned is good enough for this
 
-				if res.Completed == false {
+				if !res.Completed {
 					Error.Printf("Workflow %s did not fully complete\n", res.Name)
 				}
 
-				if quiet == false {
+				if !quiet {
 					// Process all of the enclosed CommandReturns
 
 					for _, c := range res.CommandReturns {
@@ -583,7 +579,7 @@ func main() {
 			case <-time.After(time.Duration(timeout) * time.Second):
 				var badHosts []string
 				for h, v := range hostList {
-					if v == false {
+					if !v {
 						badHosts = append(badHosts, h)
 					}
 				}
@@ -596,7 +592,7 @@ func main() {
 			case res := <-commandResults:
 				hostList[res.HostObj.Name] = true // returned is good enough for this
 
-				if quiet == false && res.Quiet == false {
+				if !quiet && !res.Quiet {
 					switch format {
 					case "xml":
 						Log.Println(string(res.ToXML()))
@@ -611,7 +607,7 @@ func main() {
 			case <-time.After(time.Duration(timeout) * time.Second):
 				var badHosts []string
 				for h, v := range hostList {
-					if v == false {
+					if !v {
 						badHosts = append(badHosts, h)
 					}
 				}

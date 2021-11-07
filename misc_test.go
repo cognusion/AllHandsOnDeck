@@ -8,18 +8,18 @@ import (
 // Test arrays for needsRestartingMangler
 var (
 	emptyTest = []string{}
-	noneTest  = strings.Split(`2137 : /sbin/dhclient -q -lf /var/lib/dhclient/dhclient-eth0.leases -pf /var/run/dhclient-eth0.pid eth0
-2492 : /sbin/mingetty /dev/tty2
-2207 : irqbalance
-2218 : dbus-daemon --system
-2494 : /sbin/mingetty /dev/tty3
-2496 : /sbin/mingetty /dev/tty4
-1 : /sbin/init
-2498 : /sbin/mingetty /dev/tty5
-2490 : /sbin/mingetty /dev/tty1
-2503 : /sbin/agetty ttyS0 9600 vt100-nav
-2500 : /sbin/mingetty /dev/tty6
-`, "\n")
+	/*noneTest  = strings.Split(`2137 : /sbin/dhclient -q -lf /var/lib/dhclient/dhclient-eth0.leases -pf /var/run/dhclient-eth0.pid eth0
+	2492 : /sbin/mingetty /dev/tty2
+	2207 : irqbalance
+	2218 : dbus-daemon --system
+	2494 : /sbin/mingetty /dev/tty3
+	2496 : /sbin/mingetty /dev/tty4
+	1 : /sbin/init
+	2498 : /sbin/mingetty /dev/tty5
+	2490 : /sbin/mingetty /dev/tty1
+	2503 : /sbin/agetty ttyS0 9600 vt100-nav
+	2500 : /sbin/mingetty /dev/tty6
+	`, "\n")*/
 	dTest = strings.Split(`26068 : /usr/bin/mongod -f /etc/mongod2.conf
 25930 : /usr/bin/mongod -f /etc/mongod.conf
 693 : /sbin/udevd -d

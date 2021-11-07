@@ -1,4 +1,4 @@
-// +build go1.4
+//go:build go1.4
 
 package main
 
@@ -25,7 +25,7 @@ type Host struct {
 
 // SortTags sorts the Host's Tags array in alphanumeric order
 func (h *Host) SortTags() {
-	if sort.StringsAreSorted(h.Tags) == false {
+	if !sort.StringsAreSorted(h.Tags) {
 		sort.Strings(h.Tags)
 	}
 }
@@ -106,7 +106,7 @@ func (h *Host) If(cond string) bool {
 				found = h.Port == fport
 			} else {
 				// we started allowing port to be skipped
-				found = 22 == fport
+				found = fport == 22
 			}
 		case "Wave":
 			fwave, _ := strconv.Atoi(val)
@@ -167,7 +167,7 @@ func (h *Host) If(cond string) bool {
 func (h *Host) And(conds []string) bool {
 	for _, a := range conds {
 		ret := h.If(a)
-		if ret == false {
+		if !ret {
 			return false
 		}
 	}
@@ -179,7 +179,7 @@ func (h *Host) Or(conds []string) bool {
 	for _, o := range conds {
 		//Debug.Printf("\tOR: %s\n",o)
 		ret := h.If(o)
-		if ret == true {
+		if ret {
 			return true
 		}
 	}

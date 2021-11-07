@@ -1,13 +1,9 @@
-// +build go1.4
-// +build !plan9
+//go:build go1.4 && !plan9
 
 package main
 
 import (
 	"crypto/rand"
-	"fmt"
-	"io"
-	"os"
 	"path/filepath"
 	"strings"
 )
@@ -143,6 +139,9 @@ func randString(size int) string {
 	return string(bytes)
 }
 
+/*
+Vestigial functions
+
 // copyFile copies a file from src to dst. If src and dst files exist, and are
 // the same, then return success. Otherise, attempt to create a hard link
 // between the two files. If that fail, copy the file contents from src to dst.
@@ -204,3 +203,5 @@ func copyFileContents(src, dst string) (err error) {
 	err = out.Sync()
 	return
 }
+
+*/

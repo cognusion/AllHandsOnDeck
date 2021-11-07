@@ -1,5 +1,4 @@
-// +build go1.4
-// +build !windows,!plan9
+//go:build go1.4 && !windows && !plan9
 
 // UNIX-specific stuff goes here, so we do not break the Windows.
 package main

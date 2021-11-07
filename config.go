@@ -43,16 +43,16 @@ func (c *Config) FilteredHostList(filter string, wave, workflowIndex int) (hosts
 
 	for _, host := range c.Hosts {
 
-		if host.Offline == true {
+		if host.Offline {
 			// Check to see if the host is offline
 			continue
 		} else if wave > 0 && host.Wave != wave {
 			// Check to see if we're using waves, and if this is in it
 			continue
-		} else if filter != "" && host.If(filter) == false {
+		} else if filter != "" && !host.If(filter) {
 			// Check to see if the this host matches our filter
 			continue
-		} else if workflowIndex >= 0 && host.If(c.Workflows[workflowIndex].Filter) == false {
+		} else if workflowIndex >= 0 && !host.If(c.Workflows[workflowIndex].Filter) {
 			// Check to see if we're using workflows, and if this is in it
 			continue
 		}

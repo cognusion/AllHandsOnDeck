@@ -1,4 +1,4 @@
-// +build go1.4
+//go:build go1.4
 
 package main
 
@@ -7,10 +7,11 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"golang.org/x/crypto/ssh"
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/crypto/ssh"
 )
 
 // CommandReturn is a structure returned after executing a Command
@@ -132,7 +133,7 @@ func (cr *CommandReturn) ToJSON(pretty bool) (j []byte) {
 	f := cr.format()
 
 	var err error
-	if pretty == false {
+	if !pretty {
 		j, err = json.Marshal(f)
 	} else {
 		j, err = json.MarshalIndent(f, "", "\t")
@@ -209,7 +210,7 @@ func (c *Command) Exec() (cr CommandReturn) {
 		port = strconv.Itoa(c.Host.Port)
 	}
 
-	if _, ok := GlobalVars["dryrun"]; ok == false {
+	if _, ok := GlobalVars["dryrun"]; !ok {
 		// We're doing it live
 
 		conn, err := ssh.Dial("tcp", connectName+":"+port, c.SSHConfig)

@@ -1,5 +1,4 @@
-// +build go1.4
-// +build windows
+//go:build go1.4 && windows
 
 // Windows-specific stuff goes here, so we can accommodate the broken Windows.
 package main

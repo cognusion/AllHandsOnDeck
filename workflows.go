@@ -1,4 +1,4 @@
-// +build go1.4
+//go:build go1.4
 
 package main
 
@@ -74,17 +74,13 @@ func (w *Workflow) varParse(s string) string {
 	// First check the global list
 	for k, v := range GlobalVars {
 		nk := "%" + k + "%"
-		if strings.Contains(s, nk) {
-			s = strings.Replace(s, nk, v, -1)
-		}
+		s = strings.Replace(s, nk, v, -1)
 	}
 
 	// Then the workflow list
 	for k, v := range w.vars {
 		nk := "%" + k + "%"
-		if strings.Contains(s, nk) {
-			s = strings.Replace(s, nk, v, -1)
-		}
+		s = strings.Replace(s, nk, v, -1)
 	}
 
 	return s
@@ -123,7 +119,7 @@ func (w *Workflow) Exec(com Command) (wr WorkflowReturn) {
 	Debug.Printf("Executing workflow %s\n", w.Name)
 
 	// Per-wf override for sudo
-	if w.Sudo == true {
+	if w.Sudo {
 		com.Sudo = true
 	}
 
@@ -185,7 +181,7 @@ func (w *Workflow) Exec(com Command) (wr WorkflowReturn) {
 			com.Cmd = c
 			res := com.Exec()
 			wr.CommandReturns = append(wr.CommandReturns, res)
-			if res.Error != nil && (len(w.CommandBreaks) == 0 || w.CommandBreaks[i] == true) {
+			if res.Error != nil && (len(w.CommandBreaks) == 0 || w.CommandBreaks[i]) {
 				// We have a valid error, and either we're not using CommandBreaks (assume breaks)
 				//	or we are using CommandBreaks, and they're true
 				return
@@ -244,10 +240,8 @@ func (w *Workflow) handleFor(c string, com Command) ([]CommandReturn, error) {
 		serviceList(action, list, serviceResults, com)
 
 		for li := 0; li < len(list); li++ {
-			select {
-			case res := <-serviceResults:
-				crs = append(crs, res)
-			}
+			res := <-serviceResults
+			crs = append(crs, res)
 		}
 	}
 
@@ -266,10 +260,10 @@ func (w *Workflow) handleSet(c string) (err error) {
 
 	vname := strings.Trim(cparts[1], "%") // nuke the lead/trail percents from the varname
 
-	vvalue := strings.Join(cparts[2:len(cparts)], " ") // concatenate any end parts
-	vvalue = strings.Trim(vvalue, "\"")                // nuke lead/trail dub-quotes
-	vvalue = strings.Trim(vvalue, "'")                 // nuke lead/trail sing-quotes
-	vvalue = w.varParse(vvalue)                        // Check it for vars
+	vvalue := strings.Join(cparts[2:], " ") // concatenate any end parts
+	vvalue = strings.Trim(vvalue, "\"")     // nuke lead/trail dub-quotes
+	vvalue = strings.Trim(vvalue, "'")      // nuke lead/trail sing-quotes
+	vvalue = w.varParse(vvalue)             // Check it for vars
 
 	if strings.Contains(vvalue, "S3(") {
 		// We need a tokened S3 URL
@@ -294,9 +288,9 @@ func (w *Workflow) handleSet(c string) (err error) {
 func (w *Workflow) handleS3(vvalue, accessKey, secretKey string) (string, error) {
 
 	// Confirm we actually have the bits set
-	if _, ok := GlobalVars["awsaccess_key"]; ok == false {
+	if _, ok := GlobalVars["awsaccess_key"]; !ok {
 		return "", fmt.Errorf("no AWS access key set, but S3() called")
-	} else if _, ok := GlobalVars["awsaccess_secretkey"]; ok == false {
+	} else if _, ok := GlobalVars["awsaccess_secretkey"]; !ok {
 		return "", fmt.Errorf("no AWS secret key set, but S3() called")
 	}
 
@@ -318,12 +312,12 @@ func (w *Workflow) handleRand(vvalue string) (string, error) {
 	re := regexp.MustCompile(`^(.*)RAND\(([0-9]+)\)(.*)$`)
 	rparts := re.FindStringSubmatch(vvalue)
 	if rparts == nil {
-		return "", fmt.Errorf("Error processing RAND(n): '%s'", vvalue)
+		return "", fmt.Errorf("error processing RAND(n): '%s'", vvalue)
 	}
 
 	n, err := strconv.Atoi(rparts[2])
 	if err != nil {
-		return "", fmt.Errorf("Problem using '%s' as a number", rparts[2])
+		return "", fmt.Errorf("problem using '%s' as a number", rparts[2])
 	}
 	return rparts[1] + randString(n) + rparts[3], nil
 }

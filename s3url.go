@@ -1,4 +1,4 @@
-// +build go1.4
+//go:build go1.4
 
 package main
 
@@ -34,7 +34,7 @@ func s3UrlToParts(url string) (sr *S3Url) {
 		parts := strings.Split(tparts[0], "/")
 		bucket := strings.TrimSuffix(parts[2], ".s3.amazonaws.com")
 		file := parts[len(parts)-1]
-		path := "/" + strings.Join(parts[3:len(parts)], "/")
+		path := "/" + strings.Join(parts[3:], "/")
 		sr = &S3Url{
 			Bucket: bucket,
 			Path:   path,
@@ -69,7 +69,7 @@ func generateS3Url(bucket string, filePath string, awsAccessKeyID string,
 	endPoint := "s3.amazonaws.com"
 
 	// In case it's not there, make sure it is
-	if strings.HasPrefix(filePath, "/") == false {
+	if !strings.HasPrefix(filePath, "/") {
 		filePath = "/" + filePath
 	}
 
