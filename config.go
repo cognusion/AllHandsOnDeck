@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
+	"os"
 )
 
 // Config is a toplevel struct to house arrays of Hosts, Workflows, and Miscs
@@ -84,7 +84,7 @@ func loadConfigs(srcDir string) Config {
 // Load the given config file into the specified config
 func loadConfigFile(filePath string, conf Config) Config {
 
-	buf, err := ioutil.ReadFile(filePath)
+	buf, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Fatalf("Error reading config file '%s': %s\n", filePath, err)
 	}

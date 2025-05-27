@@ -1,14 +1,14 @@
 package main
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 )
 
 // Global log vars
 var (
-	Debug = log.New(ioutil.Discard, "", log.Lshortfile)
+	Debug = log.New(io.Discard, "", log.Lshortfile)
 	Log   = log.New(os.Stdout, "", 0)
 	Error = log.New(os.Stderr, "", 0)
 )

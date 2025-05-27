@@ -15,7 +15,6 @@ import (
 	"golang.org/x/crypto/ssh/agent"
 
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -379,7 +378,7 @@ func main() {
 	} else {
 		// Use a single key
 
-		buf, err := ioutil.ReadFile(sshKey)
+		buf, err := os.ReadFile(sshKey)
 		if err != nil {
 			log.Fatalf("Error reading specified key '%s': %s\n", sshKey, err)
 		}
