@@ -2,6 +2,13 @@
 
 All Hands On Deck (aka "all") is a simple agentless orchestration system written in Go, for Linux. You can run it *from* any platform that supports Go (Macs are popular, I hear). Commands are executed via SSH in parallelish, as are workflows (commands within a workflow are executed serially);
 
+## WARNING
+
+TL;DR: **Abandoned**
+
+This codebase hasn't seen meaningful improvement since the Fall of 2020, and hasn't been meaningfully jogged by its author since possibly the Spring of 2022. The author will,
+for the forseeable future, continue to respond to security-related updates of dependencies and update it accordingly; however please consider this project **abandoned**.
+
 ## Basics
 
 All allows you to execute arbitrary "commands" on hosts. You can also group "commands" into "workflows", which can be pretty complicated. 
