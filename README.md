@@ -4,10 +4,9 @@ All Hands On Deck (aka "all") is a simple agentless orchestration system written
 
 ## WARNING
 
-TL;DR: **Abandoned**
+**Abandoned**
 
-This codebase hasn't seen meaningful improvement since the Fall of 2020, and hasn't been meaningfully jogged by its author since possibly the Spring of 2022. The author will,
-for the foreseeable future, continue to respond to security-related updates of dependencies and update it accordingly; however please consider this project **abandoned**.
+This codebase hasn't seen meaningful improvement since the Fall of 2020, and hasn't been meaningfully jogged by its author since possibly the Spring of 2022.
 
 ## Basics
 
